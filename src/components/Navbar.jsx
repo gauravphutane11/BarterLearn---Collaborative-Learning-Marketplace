@@ -31,6 +31,18 @@ const Navbar = ({ currentUser, onLogout }) => {
                 ...styles.navLink,
                 ...(isActive(item.path) ? styles.navLinkActive : {})
               }}
+              onMouseEnter={(e) => {
+                if (!isActive(item.path)) {
+                  e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive(item.path)) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }
+              }}
             >
               <item.icon size={20} />
               <span>{item.label}</span>
@@ -41,7 +53,20 @@ const Navbar = ({ currentUser, onLogout }) => {
         <div style={styles.userSection}>
           <span style={styles.avatar}>{currentUser.avatar}</span>
           <span style={styles.userName}>{currentUser.name}</span>
-          <button onClick={onLogout} style={styles.logoutBtn}>
+          <button 
+            onClick={onLogout} 
+            style={styles.logoutBtn}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#fee2e2';
+              e.currentTarget.style.color = '#ef4444';
+              e.currentTarget.style.transform = 'rotate(-10deg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-medium)';
+              e.currentTarget.style.transform = 'rotate(0deg)';
+            }}
+          >
             <LogOut size={18} />
           </button>
         </div>
@@ -52,9 +77,10 @@ const Navbar = ({ currentUser, onLogout }) => {
 
 const styles = {
   nav: {
-    backgroundColor: 'var(--bg-white)',
-    borderBottom: '1px solid var(--border-color)',
-    boxShadow: 'var(--shadow)',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.3)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     position: 'sticky',
     top: 0,
     zIndex: 1000
@@ -73,18 +99,24 @@ const styles = {
     alignItems: 'center',
     gap: '10px',
     fontWeight: 'bold',
-    fontSize: '20px',
-    color: 'var(--primary-color)'
+    fontSize: '22px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
   },
   logo: {
-    fontSize: '28px'
+    fontSize: '32px',
+    animation: 'float 3s ease-in-out infinite'
   },
   brandName: {
     display: 'inline-block'
   },
   navLinks: {
     display: 'flex',
-    gap: '10px',
+    gap: '8px',
     flex: 1,
     justifyContent: 'center'
   },
@@ -92,16 +124,18 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: '10px 18px',
+    borderRadius: '12px',
     color: 'var(--text-medium)',
-    transition: 'all 0.2s',
+    transition: 'all 0.3s ease',
     fontSize: '14px',
-    fontWeight: '500'
+    fontWeight: '500',
+    cursor: 'pointer'
   },
   navLinkActive: {
-    backgroundColor: 'var(--primary-color)',
-    color: 'white'
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
   },
   userSection: {
     display: 'flex',
@@ -109,19 +143,21 @@ const styles = {
     gap: '12px'
   },
   avatar: {
-    fontSize: '24px'
+    fontSize: '28px',
+    animation: 'pulse 3s ease-in-out infinite'
   },
   userName: {
     fontSize: '14px',
-    fontWeight: '500',
+    fontWeight: '600',
     color: 'var(--text-dark)'
   },
   logoutBtn: {
-    padding: '8px',
-    borderRadius: '8px',
+    padding: '10px',
+    borderRadius: '10px',
     backgroundColor: 'transparent',
     color: 'var(--text-medium)',
-    transition: 'all 0.2s'
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   }
 };
 

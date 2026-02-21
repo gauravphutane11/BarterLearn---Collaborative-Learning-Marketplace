@@ -31,7 +31,21 @@ const Home = ({ currentUser, users }) => {
 
       <div style={styles.statsGrid}>
         {stats.map((stat, index) => (
-          <div key={index} style={styles.statCard}>
+          <div 
+            key={index} 
+            style={{
+              ...styles.statCard,
+              animationDelay: `${index * 0.1}s`
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-8px)';
+              e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+            }}
+          >
             <div style={{ ...styles.statIcon, backgroundColor: stat.color + '20', color: stat.color }}>
               <stat.icon size={24} />
             </div>
@@ -48,7 +62,18 @@ const Home = ({ currentUser, users }) => {
           <h2 style={styles.sectionTitle}>Recent Activity</h2>
           <div style={styles.activityList}>
             {recentActivity.map((activity, index) => (
-              <div key={index} style={styles.activityItem}>
+              <div 
+                key={index} 
+                style={styles.activityItem}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateX(8px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
                 <div style={styles.activityIcon}>
                   {activity.type === 'session' && '🎥'}
                   {activity.type === 'match' && '🤝'}
@@ -71,7 +96,18 @@ const Home = ({ currentUser, users }) => {
           <h2 style={styles.sectionTitle}>Suggested Matches</h2>
           <div style={styles.matchList}>
             {suggestedMatches.map((user) => (
-              <div key={user.id} style={styles.matchCard}>
+              <div 
+                key={user.id} 
+                style={styles.matchCard}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
                 <div style={styles.matchHeader}>
                   <span style={styles.matchAvatar}>{user.avatar}</span>
                   <div>
@@ -85,6 +121,14 @@ const Home = ({ currentUser, users }) => {
                 <button 
                   onClick={() => navigate('/matching')}
                   style={styles.matchButton}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                  }}
                 >
                   View Match
                   <ArrowRight size={16} />
@@ -96,11 +140,33 @@ const Home = ({ currentUser, users }) => {
       </div>
 
       <div style={styles.quickActions}>
-        <button onClick={() => navigate('/matching')} style={{...styles.actionButton, backgroundColor: 'var(--primary-color)'}}>
+        <button 
+          onClick={() => navigate('/matching')} 
+          style={{...styles.actionButton, backgroundColor: 'var(--primary-color)'}}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 32px rgba(99, 102, 241, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
+          }}
+        >
           <Users size={20} />
           Find Matches
         </button>
-        <button onClick={() => navigate('/profile')} style={{...styles.actionButton, backgroundColor: 'var(--secondary-color)'}}>
+        <button 
+          onClick={() => navigate('/profile')} 
+          style={{...styles.actionButton, backgroundColor: 'var(--secondary-color)'}}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
+          }}
+        >
           <TrendingUp size={20} />
           Update Profile
         </button>
@@ -117,12 +183,16 @@ const styles = {
     flex: 1
   },
   header: {
-    marginBottom: '32px'
+    marginBottom: '32px',
+    animation: 'slideInUp 0.6s ease-out'
   },
   title: {
-    fontSize: '32px',
+    fontSize: '36px',
     fontWeight: 'bold',
-    color: 'var(--text-dark)',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
     marginBottom: '8px'
   },
   subtitle: {
@@ -140,19 +210,26 @@ const styles = {
     alignItems: 'center',
     gap: '16px',
     padding: '24px',
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    boxShadow: 'var(--shadow)'
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    animation: 'slideInUp 0.6s ease-out',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
   },
   statIcon: {
-    padding: '12px',
-    borderRadius: '12px',
+    padding: '16px',
+    borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease'
   },
   statValue: {
-    fontSize: '28px',
+    fontSize: '32px',
     fontWeight: 'bold',
     color: 'var(--text-dark)',
     marginBottom: '4px'
@@ -169,13 +246,16 @@ const styles = {
     marginBottom: '32px'
   },
   section: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
     padding: '24px',
-    boxShadow: 'var(--shadow)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    animation: 'slideInUp 0.8s ease-out',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
   },
   sectionTitle: {
-    fontSize: '18px',
+    fontSize: '20px',
     fontWeight: '600',
     color: 'var(--text-dark)',
     marginBottom: '20px'
@@ -188,12 +268,16 @@ const styles = {
   activityItem: {
     display: 'flex',
     gap: '12px',
-    padding: '12px',
-    backgroundColor: 'var(--bg-gray)',
-    borderRadius: '8px'
+    padding: '16px',
+    background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)',
+    borderRadius: '12px',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer',
+    border: '1px solid var(--border-color)'
   },
   activityIcon: {
-    fontSize: '24px'
+    fontSize: '28px',
+    animation: 'pulse 2s ease-in-out infinite'
   },
   activityContent: {
     flex: 1
@@ -215,9 +299,11 @@ const styles = {
   },
   matchCard: {
     padding: '16px',
-    backgroundColor: 'var(--bg-gray)',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)'
+    background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)',
+    borderRadius: '12px',
+    border: '1px solid var(--border-color)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   },
   matchHeader: {
     display: 'flex',
@@ -226,7 +312,8 @@ const styles = {
     marginBottom: '12px'
   },
   matchAvatar: {
-    fontSize: '32px'
+    fontSize: '36px',
+    animation: 'float 3s ease-in-out infinite'
   },
   matchName: {
     fontSize: '15px',
@@ -249,28 +336,33 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
     width: '100%',
-    padding: '8px',
-    backgroundColor: 'var(--primary-color)',
+    padding: '10px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
-    fontWeight: '500'
+    fontWeight: '500',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
   },
   quickActions: {
     display: 'flex',
     gap: '16px',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    animation: 'slideInUp 1s ease-out'
   },
   actionButton: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    padding: '14px 28px',
+    padding: '16px 32px',
     color: 'white',
-    borderRadius: '10px',
+    borderRadius: '12px',
     fontSize: '15px',
     fontWeight: '600',
-    boxShadow: 'var(--shadow)'
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   }
 };
 

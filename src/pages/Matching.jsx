@@ -96,7 +96,21 @@ const Matching = ({ currentUser, users }) => {
         ) : (
           <div style={styles.matchesGrid}>
             {matches.map((match, index) => (
-              <div key={match.user.id} style={styles.matchCard}>
+              <div 
+                key={match.user.id} 
+                style={{
+                  ...styles.matchCard,
+                  animationDelay: `${index * 0.1}s`
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 12px 48px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+                }}
+              >
                 <div style={styles.matchHeader}>
                   <div style={styles.matchBadge}>
                     #{index + 1} Match
@@ -175,6 +189,14 @@ const Matching = ({ currentUser, users }) => {
                   <button 
                     onClick={() => handleConnect(match)}
                     style={styles.connectButton}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                      e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+                    }}
                   >
                     <Users size={18} />
                     Connect
@@ -182,6 +204,14 @@ const Matching = ({ currentUser, users }) => {
                   <button 
                     onClick={() => setSelectedMatch(match)}
                     style={styles.viewButton}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+                      e.currentTarget.style.borderColor = 'var(--primary-color)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-gray)';
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                    }}
                   >
                     View Full Profile
                     <ArrowRight size={18} />
@@ -290,13 +320,18 @@ const styles = {
     gap: '24px'
   },
   matchCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '16px',
     padding: '24px',
-    boxShadow: 'var(--shadow)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '16px',
+    animation: 'slideInUp 0.5s ease-out',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   },
   matchHeader: {
     display: 'flex',
@@ -304,17 +339,21 @@ const styles = {
     alignItems: 'center'
   },
   matchBadge: {
-    padding: '6px 12px',
-    backgroundColor: 'var(--primary-color)',
+    padding: '8px 14px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     borderRadius: '20px',
     fontSize: '12px',
-    fontWeight: '600'
+    fontWeight: '600',
+    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
   },
   matchScore: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: 'var(--secondary-color)'
+    fontSize: '14px',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
   },
   userInfo: {
     display: 'flex',
@@ -424,11 +463,14 @@ const styles = {
     justifyContent: 'center',
     gap: '6px',
     padding: '12px',
-    backgroundColor: 'var(--primary-color)',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontSize: '14px',
-    fontWeight: '600'
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+    cursor: 'pointer'
   },
   viewButton: {
     flex: 1,

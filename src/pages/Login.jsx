@@ -63,35 +63,46 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    padding: '20px'
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden'
   },
   loginBox: {
-    backgroundColor: 'white',
-    borderRadius: '16px',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '24px',
     padding: '40px',
     maxWidth: '420px',
     width: '100%',
-    boxShadow: 'var(--shadow-lg)'
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+    animation: 'slideInUp 0.6s ease-out',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
   },
   header: {
     textAlign: 'center',
-    marginBottom: '30px'
+    marginBottom: '30px',
+    animation: 'fadeIn 1s ease-out'
   },
   logo: {
     fontSize: '64px',
     display: 'block',
-    marginBottom: '16px'
+    marginBottom: '16px',
+    animation: 'float 3s ease-in-out infinite'
   },
   title: {
-    fontSize: '32px',
+    fontSize: '36px',
     fontWeight: 'bold',
-    color: 'var(--text-dark)',
-    marginBottom: '8px'
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    marginBottom: '8px',
+    animation: 'slideInUp 0.8s ease-out'
   },
   subtitle: {
     fontSize: '16px',
-    color: 'var(--text-medium)'
+    color: 'var(--text-medium)',
+    animation: 'slideInUp 1s ease-out'
   },
   form: {
     display: 'flex',
@@ -105,39 +116,45 @@ const styles = {
     marginBottom: '4px'
   },
   select: {
-    padding: '12px',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)',
+    padding: '14px',
+    borderRadius: '12px',
+    border: '2px solid var(--border-color)',
     fontSize: '14px',
-    backgroundColor: 'var(--bg-gray)'
+    backgroundColor: 'white',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   },
   button: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    padding: '14px',
-    backgroundColor: 'var(--primary-color)',
+    padding: '16px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
-    borderRadius: '8px',
+    borderRadius: '12px',
     fontSize: '16px',
     fontWeight: '600',
     marginTop: '10px',
-    transition: 'all 0.2s'
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    cursor: 'pointer'
   },
   buttonDisabled: {
-    backgroundColor: 'var(--text-light)',
-    cursor: 'not-allowed'
+    background: 'var(--text-light)',
+    cursor: 'not-allowed',
+    boxShadow: 'none'
   },
   info: {
     marginTop: '24px',
     padding: '16px',
-    backgroundColor: 'var(--bg-gray)',
-    borderRadius: '8px'
+    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+    borderRadius: '12px',
+    animation: 'slideInUp 1.2s ease-out'
   },
   infoText: {
     fontSize: '13px',
-    color: 'var(--text-medium)',
+    color: '#92400e',
     lineHeight: '1.5'
   }
 };
