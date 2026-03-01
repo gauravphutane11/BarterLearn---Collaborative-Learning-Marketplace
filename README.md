@@ -33,18 +33,47 @@ A modern web application that enables users to exchange skills and knowledge thr
    cd barterlearn
    ```
 
-2. **Install dependencies**
+2. **Install frontend dependencies**
    ```bash
    npm install
    ```
 
-3. **Start the development server**
+3. **Set up the backend**
    ```bash
-   npm run dev
+   cd backend
+   python -m venv venv             # create virtual environment
+   venv\Scripts\activate         # Windows activate
+   pip install -r requirements.txt
+   flask db init                   # initialize migrations
+   flask db migrate -m "initial"
+   flask db upgrade   # optionally populate sample users
+   python seed.py   ```
+   Create a `.env` file with at least:
+   ```env
+   JWT_SECRET_KEY=your_jwt_secret
+   DATABASE_URL=sqlite:///barterlearn.db
    ```
 
-4. **Open your browser**
-   Navigate to `http://localhost:3000`
+4. **Start both servers**
+   - backend: `cd backend && flask run`
+   - frontend: back in root `npm run dev`
+
+5. **Open your browser**
+   Navigate to `http://localhost:3000` (frontend) and use API at `http://localhost:5000`
+
+---
+
+### Production Deployment Notes
+
+Once the application is ready for production you'll need to:
+
+1. Build the React app (`npm run build`) and serve the static files with a web server (Nginx, Express, etc.).
+2. Configure the Flask backend for production (disable debug, set proper `JWT_SECRET_KEY`, use a real database such as PostgreSQL or MySQL, and enable HTTPS).
+3. Consider containerizing both front‑ and back‑ends with Docker and orchestrating with `docker-compose` or Kubernetes.
+4. Deploy the frontend to a static host (Vercel, Netlify, AWS S3/CloudFront) and the backend to a Python‑friendly service (Heroku, Azure App Service, AWS Elastic Beanstalk, etc.).
+5. Set environment variables on the hosting platform for secrets and database connection strings.
+
+Refer to the **🏗️ Project Structure** section above for more details on where to place files.
 
 ### Build for Production
 
@@ -95,6 +124,11 @@ The production build will be created in the `dist` directory.
 
 ```
 barterlearn/
+├── backend/                   # Python/Flask API
+│   ├── app.py                 # Flask application
+│   ├── models.py              # SQLAlchemy models
+│   ├── requirements.txt       # Python dependencies
+│   └── .env                   # environment variables (JWT secret, DATABASE_URL)
 ├── public/
 ├── src/
 │   ├── components/
@@ -107,14 +141,15 @@ barterlearn/
 │   │   ├── VideoChat.jsx        # Live session interface
 │   │   └── Progress.jsx         # Progress tracking
 │   ├── data/
-│   │   └── mockData.js          # Sample data
+│   │   └── staticData.js        # Static lists (skills etc.)
+
 │   ├── App.jsx                  # Main app component
 │   ├── main.jsx                 # Entry point
 │   └── index.css                # Global styles
 ├── index.html
 ├── package.json
 ├── vite.config.js
-└── README.md
+├── README.md
 ```
 
 ## 🛠️ Technology Stack

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, X, Save, Award } from 'lucide-react';
-import { popularSkills } from '../data/mockData';
+import { popularSkills } from '../data/staticData';
 
 const Profile = ({ currentUser, updateUser }) => {
   const [isEditing, setIsEditing] = useState(false);

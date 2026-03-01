@@ -1,12 +1,28 @@
 import React, { useState } from 'react';
 import { LogIn } from 'lucide-react';
+import { api } from '../api';
 
-const Login = ({ onLogin, users }) => {
-  const [selectedUser, setSelectedUser] = useState('');
+const Login = ({ onLogin }) => {
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
 
   const handleLogin = () => {
-    if (selectedUser) {
-      onLogin(parseInt(selectedUser));
+    if (email && password) {
+      onLogin(email, password);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (name && email && password) {
+      try {
+        const res = await api.register({ name, email, password });
+        alert('Registration successful, please login');
+        setIsRegister(false);
+      } catch (err) {
+        alert(err.msg || 'Registration failed');
+      }
     }
   };
 
@@ -20,31 +36,49 @@ const Login = ({ onLogin, users }) => {
         </div>
 
         <div style={styles.form}>
-          <label style={styles.label}>Select User (Demo)</label>
-          <select 
-            value={selectedUser} 
-            onChange={(e) => setSelectedUser(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">Choose a user...</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>
-                {user.avatar} {user.name}
-              </option>
-            ))}
-          </select>
+          {isRegister && (
+            <>
+              <label style={styles.label}>Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                style={styles.input}
+              />
+            </>
+          )}
+
+          <label style={styles.label}>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            style={styles.input}
+          />
+
+          <label style={styles.label}>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            style={styles.input}
+          />
 
           <button 
-            onClick={handleLogin} 
-            disabled={!selectedUser}
+            onClick={isRegister ? handleRegister : handleLogin} 
+            disabled={isRegister ? !(name && email && password) : !(email && password)}
             style={{
               ...styles.button,
-              ...(selectedUser ? {} : styles.buttonDisabled)
+              ...((isRegister ? !(name && email && password) : !(email && password)) ? styles.buttonDisabled : {})
             }}
           >
             <LogIn size={20} />
-            <span>Login</span>
+            <span>{isRegister ? 'Register' : 'Login'}</span>
           </button>
+
+          <p style={styles.toggleText} onClick={() => setIsRegister(!isRegister)}>
+            {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
+          </p>
         </div>
 
         <div style={styles.info}>
@@ -108,6 +142,21 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px'
+  },
+  input: {
+    padding: '14px',
+    borderRadius: '12px',
+    border: '2px solid var(--border-color)',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    transition: 'all 0.3s ease'
+  },
+  toggleText: {
+    marginTop: '12px',
+    fontSize: '13px',
+    color: 'var(--primary-color)',
+    cursor: 'pointer',
+    textAlign: 'center'
   },
   label: {
     fontSize: '14px',

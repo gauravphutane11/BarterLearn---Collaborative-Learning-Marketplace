@@ -7,24 +7,40 @@ import Matching from './pages/Matching';
 import VideoChat from './pages/VideoChat';
 import Progress from './pages/Progress';
 import Login from './pages/Login';
-import { mockUsers } from './data/mockData';
+import { api } from './api';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
 
-  const handleLogin = (userId) => {
-    const user = users.find(u => u.id === userId);
-    setCurrentUser(user);
+  const handleLogin = async (email, password) => {
+    try {
+      const { access_token } = await api.login(email, password);
+      localStorage.setItem('access_token', access_token);
+      const all = await api.getUsers();
+      setUsers(all);
+      const me = all.find(u => u.email === email);
+      setCurrentUser(me);
+    } catch (err) {
+      console.error('login failed', err);
+      alert(err.msg || 'Login failed');
+    }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('access_token');
     setCurrentUser(null);
   };
 
-  const updateUserProfile = (updatedUser) => {
-    setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
-    setCurrentUser(updatedUser);
+  const updateUserProfile = async (updatedUser) => {
+    try {
+      const res = await api.updateUser(updatedUser.id, updatedUser);
+      setUsers(users.map(u => u.id === res.id ? res : u));
+      setCurrentUser(res);
+    } catch (err) {
+      console.error('update failed', err);
+      alert(err.msg || 'Update failed');
+    }
   };
 
   return (
@@ -36,7 +52,7 @@ function App() {
           <Route 
             path="/login" 
             element={
-              currentUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} users={users} />
+              currentUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
             } 
           />
           
@@ -59,7 +75,7 @@ function App() {
           <Route 
             path="/matching" 
             element={
-              currentUser ? <Matching currentUser={currentUser} users={users} /> : <Navigate to="/login" />
+              currentUser ? <Matching currentUser={currentUser} /> : <Navigate to="/login" />
             } 
           />
           

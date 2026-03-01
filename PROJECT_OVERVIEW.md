@@ -50,7 +50,27 @@ The system matches users based on:
 - Professional color scheme
 
 ## 🏗️ Technical Architecture
+### Backend Stack
+```
+Python 3.x           → Server language
+Flask 3.0            → Web framework
+Flask-JWT-Extended   → JWT authentication
+Flask-SQLAlchemy     → ORM (SQLite by default)
+Flask-Migrate        → Database migrations
+```
 
+Routes include:
+- `POST /api/register` – create new user
+- `POST /api/login` – obtain JWT
+- `GET /api/users` – list users
+- `GET /api/users/:id` – get profile
+- `PUT /api/users/:id` – update profile (auth required)
+- `GET /api/matches` – compute simple compatibility
+- `GET /api/exchanges` – list exchanges for user
+- `POST /api/exchanges` – create new exchange
+
+
+### Frontend Stack
 ### Frontend Stack
 ```
 React 18.2.0         → UI Framework
@@ -73,14 +93,16 @@ App.jsx
 ```
 
 ### Data Flow
+The frontend now communicates with a Flask API; initial sample users can be seeded via `backend/seed.py`.
+
 ```
-mockData.js → Provides sample users and exchanges
-      ↓
-App.jsx → Manages global state (currentUser, users)
-      ↓
-Pages → Receive props and render UI
-      ↓
-User Actions → Update state via callbacks
+API (Flask) → Provides users, matches, exchanges, auth tokens
+   ↓
+App.jsx → Manages global state (currentUser, users) and stores JWT
+   ↓
+Pages → Fetch data via `src/api.js` service helpers
+   ↓
+User Actions → Call API endpoints, update state via callbacks
 ```
 
 ## 📊 Mock Data Structure

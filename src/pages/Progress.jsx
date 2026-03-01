@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, CheckCircle, Clock, Star, Calendar, BookOpen } from 'lucide-react';
-import { mockExchanges } from '../data/mockData';
+import { api } from '../api';
 
 const Progress = ({ currentUser }) => {
   const [activeTab, setActiveTab] = useState('active');
+  const [exchanges, setExchanges] = useState([]);
 
-  const activeExchanges = mockExchanges.filter(e => e.status === 'active' && e.userId === currentUser.id);
-  const completedExchanges = mockExchanges.filter(e => e.status === 'completed' && e.userId === currentUser.id);
+  useEffect(() => {
+    fetchExchanges();
+  }, []);
+
+  const fetchExchanges = async () => {
+    try {
+      const data = await api.getExchanges();
+      setExchanges(data);
+    } catch (err) {
+      console.error('error fetching exchanges', err);
+      setExchanges([]);
+    }
+  };
+
+  const activeExchanges = exchanges.filter(e => e.status === 'active' && e.userId === currentUser.id);
+  const completedExchanges = exchanges.filter(e => e.status === 'completed' && e.userId === currentUser.id);
 
   const stats = [
     { 
@@ -24,7 +39,7 @@ const Progress = ({ currentUser }) => {
     { 
       icon: Clock, 
       label: 'Total Sessions', 
-      value: mockExchanges.reduce((acc, e) => acc + e.sessionsCompleted, 0),
+      value: exchanges.reduce((acc, e) => acc + e.sessionsCompleted, 0),
       color: '#f59e0b'
     },
     { 

@@ -1,69 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { api } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { Users, Star, BookOpen, ArrowRight, Heart, X } from 'lucide-react';
 
-const Matching = ({ currentUser, users }) => {
+const Matching = ({ currentUser }) => {
   const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
-    calculateMatches();
+    fetchMatches();
   }, []);
 
-  const calculateMatches = () => {
-    const otherUsers = users.filter(u => u.id !== currentUser.id);
-    
-    const scoredMatches = otherUsers.map(user => {
-      let matchScore = 0;
-      const commonSkills = [];
-      
-      // Check if user can teach what currentUser wants to learn
-      currentUser.skillsWanted.forEach(wantedSkill => {
-        if (user.skillsOffered.includes(wantedSkill)) {
-          matchScore += 10;
-          commonSkills.push({
-            skill: wantedSkill,
-            type: 'learn',
-            canTeach: user.name
-          });
-        }
-      });
-      
-      // Check if currentUser can teach what user wants to learn
-      currentUser.skillsOffered.forEach(offeredSkill => {
-        if (user.skillsWanted.includes(offeredSkill)) {
-          matchScore += 10;
-          commonSkills.push({
-            skill: offeredSkill,
-            type: 'teach',
-            canTeach: currentUser.name
-          });
-        }
-      });
-      
-      // Bonus for mutual exchange
-      const mutualExchange = commonSkills.some(s => s.type === 'learn') && 
-                            commonSkills.some(s => s.type === 'teach');
-      if (mutualExchange) matchScore += 20;
-      
-      // Rating bonus
-      matchScore += user.rating * 2;
-      
-      return {
-        user,
-        matchScore,
-        commonSkills,
-        mutualExchange
-      };
-    });
-    
-    // Sort by match score
-    const sortedMatches = scoredMatches
-      .filter(m => m.matchScore > 0)
-      .sort((a, b) => b.matchScore - a.matchScore);
-    
-    setMatches(sortedMatches);
+  const fetchMatches = async () => {
+    try {
+      const data = await api.getMatches();
+      setMatches(data.map(u => ({ user: u, matchScore: u.compatibilityScore || 0, commonSkills: [], mutualExchange: false })));
+    } catch (err) {
+      console.error('failed to fetch matches', err);
+      setMatches([]);
+    }
   };
 
   const handleConnect = (match) => {
