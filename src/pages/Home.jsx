@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Video, TrendingUp, Award, ArrowRight } from 'lucide-react';
+import { Users, Video, TrendingUp, Award, ArrowRight, BookOpen, MessageSquare, Zap } from 'lucide-react';
 
 const Home = ({ currentUser, users }) => {
   const navigate = useNavigate();
@@ -9,13 +9,13 @@ const Home = ({ currentUser, users }) => {
     { icon: Users, label: 'Active Matches', value: currentUser.activeMatches?.length || 0, color: '#6366f1' },
     { icon: Video, label: 'Sessions This Month', value: 8, color: '#10b981' },
     { icon: TrendingUp, label: 'Completed Exchanges', value: currentUser.completedExchanges, color: '#f59e0b' },
-    { icon: Award, label: 'Rating', value: currentUser.rating + ' ⭐', color: '#ef4444' }
+    { icon: Award, label: 'Rating', value: currentUser.rating + ' ⭐', color: '#f43f5e' }
   ];
 
-  const recentActivity = [
-    { type: 'session', partner: 'Sarah Chen', skill: 'UI/UX Design', time: '2 hours ago' },
-    { type: 'match', partner: 'Marcus Williams', skill: 'Machine Learning', time: '1 day ago' },
-    { type: 'complete', partner: 'Emma Rodriguez', skill: 'Spanish', time: '3 days ago' }
+  const steps = [
+    { icon: Users, title: 'Find a Partner', desc: 'Browse users who want what you teach.' },
+    { icon: MessageSquare, title: 'Connect & Chat', desc: 'Discuss your learning goals and schedule.' },
+    { icon: Zap, title: 'Learn & Teach', desc: 'Jump into a video session and start trading.' }
   ];
 
   const suggestedMatches = users
@@ -24,26 +24,47 @@ const Home = ({ currentUser, users }) => {
 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Welcome back, {currentUser.name.split(' ')[0]}! 👋</h1>
-        <p style={styles.subtitle}>Continue your learning journey</p>
-      </div>
+      {/* Hero Section */}
+      <section style={styles.heroSection}>
+        <div style={styles.heroContent}>
+          <h1 style={styles.heroTitle}>
+            Master New Skills through <span className="gradient-text">Collaboration</span>
+          </h1>
+          <p style={styles.heroSubtitle}>
+            BarterLearn is the world's first skill-exchange marketplace. Teach what you know, learn what you don't.
+          </p>
+          <div style={styles.heroActions}>
+            <button 
+              onClick={() => navigate('/matching')} 
+              style={styles.primaryBtn}
+            >
+              Explore Matches <ArrowRight size={20} />
+            </button>
+            <button 
+              onClick={() => navigate('/profile')} 
+              style={styles.secondaryBtn}
+            >
+              Set Up Profile
+            </button>
+          </div>
+        </div>
+        <div style={styles.heroGraphic}>
+          <div className="animate-float" style={styles.floatingCard}>
+            <Zap color="#6366f1" size={40} />
+            <p>12k+ Active Learners</p>
+          </div>
+        </div>
+      </section>
 
+      {/* Stats Grid */}
       <div style={styles.statsGrid}>
         {stats.map((stat, index) => (
           <div 
             key={index} 
+            className="premium-card"
             style={{
               ...styles.statCard,
               animationDelay: `${index * 0.1}s`
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
             }}
           >
             <div style={{ ...styles.statIcon, backgroundColor: stat.color + '20', color: stat.color }}>
@@ -57,119 +78,44 @@ const Home = ({ currentUser, users }) => {
         ))}
       </div>
 
-      <div style={styles.grid}>
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Recent Activity</h2>
-          <div style={styles.activityList}>
-            {recentActivity.map((activity, index) => (
-              <div 
-                key={index} 
-                style={styles.activityItem}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateX(8px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateX(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <div style={styles.activityIcon}>
-                  {activity.type === 'session' && '🎥'}
-                  {activity.type === 'match' && '🤝'}
-                  {activity.type === 'complete' && '✅'}
-                </div>
-                <div style={styles.activityContent}>
-                  <p style={styles.activityTitle}>
-                    {activity.type === 'session' && `Session with ${activity.partner}`}
-                    {activity.type === 'match' && `Matched with ${activity.partner}`}
-                    {activity.type === 'complete' && `Completed exchange with ${activity.partner}`}
-                  </p>
-                  <p style={styles.activitySubtitle}>{activity.skill} • {activity.time}</p>
-                </div>
+      {/* How it Works */}
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>How BarterLearn Works</h2>
+        <div style={styles.stepsGrid}>
+          {steps.map((step, i) => (
+            <div key={i} style={styles.stepCard}>
+              <div style={styles.stepIcon}>
+                <step.icon size={32} color="var(--primary-color)" />
               </div>
-            ))}
-          </div>
+              <h3 style={styles.stepTitle}>{step.title}</h3>
+              <p style={styles.stepDesc}>{step.desc}</p>
+            </div>
+          ))}
         </div>
+      </section>
 
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Suggested Matches</h2>
+      <div style={styles.grid}>
+        {/* Suggested Matches */}
+        <div className="premium-card" style={styles.mainSection}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>People matching your interests</h2>
+            <button onClick={() => navigate('/matching')} style={styles.textBtn}>View all</button>
+          </div>
           <div style={styles.matchList}>
             {suggestedMatches.map((user) => (
-              <div 
-                key={user.id} 
-                style={styles.matchCard}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                <div style={styles.matchHeader}>
+              <div key={user.id} style={styles.matchItem}>
+                <div style={styles.matchInfo}>
                   <span style={styles.matchAvatar}>{user.avatar}</span>
                   <div>
                     <p style={styles.matchName}>{user.name}</p>
-                    <p style={styles.matchRating}>⭐ {user.rating}</p>
+                    <p style={styles.matchSkills}>Offers: {user.skillsOffered.join(', ')}</p>
                   </div>
                 </div>
-                <p style={styles.matchSkills}>
-                  <strong>Offers:</strong> {user.skillsOffered.slice(0, 2).join(', ')}
-                </p>
-                <button 
-                  onClick={() => navigate('/matching')}
-                  style={styles.matchButton}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
-                  }}
-                >
-                  View Match
-                  <ArrowRight size={16} />
-                </button>
+                <button onClick={() => navigate('/matching')} style={styles.matchActionBtn}>Connect</button>
               </div>
             ))}
           </div>
         </div>
-      </div>
-
-      <div style={styles.quickActions}>
-        <button 
-          onClick={() => navigate('/matching')} 
-          style={{...styles.actionButton, backgroundColor: 'var(--primary-color)'}}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 32px rgba(99, 102, 241, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1) translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
-          }}
-        >
-          <Users size={20} />
-          Find Matches
-        </button>
-        <button 
-          onClick={() => navigate('/profile')} 
-          style={{...styles.actionButton, backgroundColor: 'var(--secondary-color)'}}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 32px rgba(16, 185, 129, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1) translateY(0)';
-            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
-          }}
-        >
-          <TrendingUp size={20} />
-          Update Profile
-        </button>
       </div>
     </div>
   );
@@ -177,192 +123,212 @@ const Home = ({ currentUser, users }) => {
 
 const styles = {
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1280px',
     margin: '0 auto',
-    padding: '40px 20px',
-    flex: 1
+    padding: '0 24px 80px',
   },
-  header: {
-    marginBottom: '32px',
-    animation: 'slideInUp 0.6s ease-out'
+  heroSection: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '100px 0 60px',
+    gap: '40px',
+    minHeight: '70vh'
   },
-  title: {
-    fontSize: '36px',
-    fontWeight: 'bold',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    marginBottom: '8px'
+  heroContent: {
+    flex: 1,
+    maxWidth: '640px'
   },
-  subtitle: {
+  heroTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: '64px',
+    fontWeight: '800',
+    lineHeight: '1.1',
+    marginBottom: '24px',
+    color: '#fff'
+  },
+  heroSubtitle: {
+    fontSize: '20px',
+    color: 'var(--text-light)',
+    lineHeight: '1.6',
+    marginBottom: '40px'
+  },
+  heroActions: {
+    display: 'flex',
+    gap: '16px'
+  },
+  primaryBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '16px 32px',
+    background: 'var(--primary-color)',
+    color: '#fff',
+    borderRadius: '14px',
     fontSize: '16px',
-    color: 'var(--text-medium)'
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 10px 30px rgba(99, 102, 241, 0.4)'
+  },
+  secondaryBtn: {
+    padding: '16px 32px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    borderRadius: '14px',
+    fontSize: '16px',
+    fontWeight: '600',
+    transition: 'all 0.3s ease'
+  },
+  heroGraphic: {
+    flex: 1,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative'
+  },
+  floatingCard: {
+    background: 'rgba(30, 41, 59, 0.8)',
+    backdropFilter: 'blur(20px)',
+    padding: '32px',
+    borderRadius: '24px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    textAlign: 'center',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '12px'
   },
   statsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+    gap: '24px',
+    marginBottom: '80px'
   },
   statCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    padding: '24px',
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '16px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    animation: 'slideInUp 0.6s ease-out',
-    border: '1px solid rgba(255, 255, 255, 0.3)'
+    gap: '20px',
+    padding: '24px'
   },
   statIcon: {
-    padding: '16px',
+    width: '56px',
+    height: '56px',
     borderRadius: '16px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-    transition: 'all 0.3s ease'
+    justifyContent: 'center'
   },
   statValue: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: 'var(--text-dark)',
+    fontSize: '28px',
+    fontWeight: '700',
+    color: '#fff',
     marginBottom: '4px'
   },
   statLabel: {
-    fontSize: '13px',
-    color: 'var(--text-medium)',
-    fontWeight: '500'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '24px',
-    marginBottom: '32px'
+    fontSize: '14px',
+    color: 'var(--text-light)'
   },
   section: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-    animation: 'slideInUp 0.8s ease-out',
-    border: '1px solid rgba(255, 255, 255, 0.3)'
+    marginBottom: '80px'
   },
   sectionTitle: {
+    fontFamily: "'Outfit', sans-serif",
+    fontSize: '32px',
+    fontWeight: '700',
+    marginBottom: '40px',
+    textAlign: 'center'
+  },
+  stepsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '32px'
+  },
+  stepCard: {
+    textAlign: 'center',
+    padding: '40px',
+    borderRadius: '24px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  stepIcon: {
+    width: '64px',
+    height: '64px',
+    margin: '0 auto 24px',
+    background: 'rgba(99, 102, 241, 0.1)',
+    borderRadius: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  stepTitle: {
     fontSize: '20px',
     fontWeight: '600',
-    color: 'var(--text-dark)',
-    marginBottom: '20px'
+    marginBottom: '12px'
   },
-  activityList: {
+  stepDesc: {
+    color: 'var(--text-light)',
+    lineHeight: '1.6'
+  },
+  grid: {
+    maxWidth: '900px',
+    margin: '0 auto'
+  },
+  mainSection: {
+    padding: '32px'
+  },
+  sectionHeader: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '16px'
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '24px'
   },
-  activityItem: {
-    display: 'flex',
-    gap: '12px',
-    padding: '16px',
-    background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)',
-    borderRadius: '12px',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer',
-    border: '1px solid var(--border-color)'
-  },
-  activityIcon: {
-    fontSize: '28px',
-    animation: 'pulse 2s ease-in-out infinite'
-  },
-  activityContent: {
-    flex: 1
-  },
-  activityTitle: {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: 'var(--text-dark)',
-    marginBottom: '4px'
-  },
-  activitySubtitle: {
-    fontSize: '12px',
-    color: 'var(--text-medium)'
+  textBtn: {
+    background: 'none',
+    color: 'var(--primary-color)',
+    fontWeight: '600',
+    fontSize: '14px'
   },
   matchList: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '16px'
   },
-  matchCard: {
-    padding: '16px',
-    background: 'linear-gradient(135deg, #f9fafb 0%, #ffffff 100%)',
-    borderRadius: '12px',
-    border: '1px solid var(--border-color)',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer'
-  },
-  matchHeader: {
+  matchItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '12px'
+    justifyContent: 'space-between',
+    padding: '16px',
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  matchInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
   },
   matchAvatar: {
-    fontSize: '36px',
-    animation: 'float 3s ease-in-out infinite'
+    fontSize: '32px'
   },
   matchName: {
-    fontSize: '15px',
     fontWeight: '600',
-    color: 'var(--text-dark)'
-  },
-  matchRating: {
-    fontSize: '13px',
-    color: 'var(--text-medium)'
+    fontSize: '16px'
   },
   matchSkills: {
     fontSize: '13px',
-    color: 'var(--text-dark)',
-    marginBottom: '12px',
-    lineHeight: '1.5'
+    color: 'var(--text-light)'
   },
-  matchButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    width: '100%',
-    padding: '10px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '13px',
+  matchActionBtn: {
+    padding: '8px 20px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#fff',
+    borderRadius: '10px',
+    fontSize: '14px',
     fontWeight: '500',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
-  },
-  quickActions: {
-    display: 'flex',
-    gap: '16px',
-    justifyContent: 'center',
-    animation: 'slideInUp 1s ease-out'
-  },
-  actionButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '16px 32px',
-    color: 'white',
-    borderRadius: '12px',
-    fontSize: '15px',
-    fontWeight: '600',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer'
+    transition: 'all 0.3s ease'
   }
 };
 
