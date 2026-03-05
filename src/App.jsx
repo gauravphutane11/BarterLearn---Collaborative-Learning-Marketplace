@@ -17,10 +17,10 @@ function App() {
     try {
       const { access_token } = await api.login(email, password);
       localStorage.setItem('access_token', access_token);
+      const me = await api.getMe();
+      setCurrentUser(me);
       const all = await api.getUsers();
       setUsers(all);
-      const me = all.find(u => u.email === email);
-      setCurrentUser(me);
     } catch (err) {
       console.error('login failed', err);
       alert(err.msg || 'Login failed');
@@ -47,50 +47,50 @@ function App() {
     <Router>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} />}
-        
+
         <Routes>
-          <Route 
-            path="/login" 
+          <Route
+            path="/login"
             element={
               currentUser ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-            } 
+            }
           />
-          
-          <Route 
-            path="/" 
+
+          <Route
+            path="/"
             element={
               currentUser ? <Home currentUser={currentUser} users={users} /> : <Navigate to="/login" />
-            } 
+            }
           />
-          
-          <Route 
-            path="/profile" 
+
+          <Route
+            path="/profile"
             element={
-              currentUser ? 
-                <Profile currentUser={currentUser} updateUser={updateUserProfile} /> : 
+              currentUser ?
+                <Profile currentUser={currentUser} updateUser={updateUserProfile} /> :
                 <Navigate to="/login" />
-            } 
+            }
           />
-          
-          <Route 
-            path="/matching" 
+
+          <Route
+            path="/matching"
             element={
               currentUser ? <Matching currentUser={currentUser} /> : <Navigate to="/login" />
-            } 
+            }
           />
-          
-          <Route 
-            path="/video-chat/:matchId" 
+
+          <Route
+            path="/video-chat/:matchId"
             element={
               currentUser ? <VideoChat currentUser={currentUser} users={users} /> : <Navigate to="/login" />
-            } 
+            }
           />
-          
-          <Route 
-            path="/progress" 
+
+          <Route
+            path="/progress"
             element={
               currentUser ? <Progress currentUser={currentUser} /> : <Navigate to="/login" />
-            } 
+            }
           />
         </Routes>
       </div>

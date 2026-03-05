@@ -1,6 +1,6 @@
 from app import app, db
 from models import User
-from passlib.hash import bcrypt
+from werkzeug.security import generate_password_hash
 
 # sample users matching previous mockData.js
 def seed_users():
@@ -60,7 +60,7 @@ def seed_users():
         user = User(
             name=u['name'],
             email=u['email'],
-            password=bcrypt.hash('password'),
+            password=generate_password_hash('password'),
             avatar=u['avatar'],
             bio=u['bio'],
             skills_offered=u['skills_offered'],

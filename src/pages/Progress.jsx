@@ -20,31 +20,64 @@ const Progress = ({ currentUser }) => {
     }
   };
 
-  const activeExchanges = exchanges.filter(e => e.status === 'active' && e.userId === currentUser.id);
-  const completedExchanges = exchanges.filter(e => e.status === 'completed' && e.userId === currentUser.id);
+  const handleLogSession = async (exchange) => {
+    try {
+      const nextCount = Math.min(exchange.sessionsCompleted + 1, exchange.totalSessions);
+      if (nextCount === exchange.sessionsCompleted) return;
+
+      const res = await api.updateExchange(exchange.id, { sessions_completed: nextCount });
+      setExchanges(exchanges.map(e => e.id === res.id ? res : e));
+    } catch (err) {
+      console.error('failed to log session', err);
+      alert('Failed to log session');
+    }
+  };
+
+  const handleCompleteExchange = async (exchange) => {
+    const rating = prompt('Please rate this exchange (1-5):', '5');
+    if (rating === null) return;
+
+    const ratingNum = parseInt(rating);
+    if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      alert('Please enter a valid rating between 1 and 5');
+      return;
+    }
+
+    try {
+      const res = await api.updateExchange(exchange.id, { status: 'completed', rating: ratingNum });
+      setExchanges(exchanges.map(e => e.id === res.id ? res : e));
+      alert('Exchange marked as completed! 🎉');
+    } catch (err) {
+      console.error('failed to complete exchange', err);
+      alert('Failed to complete exchange');
+    }
+  };
+
+  const activeExchanges = exchanges.filter(e => e.status === 'active' && (e.userId === currentUser.id || e.partnerId === currentUser.id));
+  const completedExchanges = exchanges.filter(e => e.status === 'completed' && (e.userId === currentUser.id || e.partnerId === currentUser.id));
 
   const stats = [
-    { 
-      icon: BookOpen, 
-      label: 'Active Exchanges', 
+    {
+      icon: BookOpen,
+      label: 'Active Exchanges',
       value: activeExchanges.length,
       color: '#6366f1'
     },
-    { 
-      icon: CheckCircle, 
-      label: 'Completed', 
+    {
+      icon: CheckCircle,
+      label: 'Completed',
       value: completedExchanges.length,
       color: '#10b981'
     },
-    { 
-      icon: Clock, 
-      label: 'Total Sessions', 
+    {
+      icon: Clock,
+      label: 'Total Sessions',
       value: exchanges.reduce((acc, e) => acc + e.sessionsCompleted, 0),
       color: '#f59e0b'
     },
-    { 
-      icon: Star, 
-      label: 'Avg Rating', 
+    {
+      icon: Star,
+      label: 'Avg Rating',
       value: currentUser.rating,
       color: '#ef4444'
     }
@@ -64,7 +97,7 @@ const Progress = ({ currentUser }) => {
       <div style={styles.statsGrid}>
         {stats.map((stat, index) => (
           <div key={index} style={styles.statCard}>
-            <div style={{...styles.statIcon, backgroundColor: stat.color + '20', color: stat.color}}>
+            <div style={{ ...styles.statIcon, backgroundColor: stat.color + '20', color: stat.color }}>
               <stat.icon size={24} />
             </div>
             <div>
@@ -77,7 +110,7 @@ const Progress = ({ currentUser }) => {
 
       <div style={styles.tabContainer}>
         <div style={styles.tabs}>
-          <button 
+          <button
             onClick={() => setActiveTab('active')}
             style={{
               ...styles.tab,
@@ -86,7 +119,7 @@ const Progress = ({ currentUser }) => {
           >
             Active ({activeExchanges.length})
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('completed')}
             style={{
               ...styles.tab,
@@ -144,7 +177,7 @@ const Progress = ({ currentUser }) => {
                         </span>
                       </div>
                       <div style={styles.progressBar}>
-                        <div 
+                        <div
                           style={{
                             ...styles.progressFill,
                             width: `${calculateProgress(exchange.sessionsCompleted, exchange.totalSessions)}%`
@@ -154,11 +187,11 @@ const Progress = ({ currentUser }) => {
                     </div>
 
                     <div style={styles.exchangeActions}>
-                      <button style={styles.continueButton}>
-                        <Calendar size={16} />
-                        Schedule Next Session
+                      <button onClick={() => handleLogSession(exchange)} style={styles.continueButton}>
+                        <Clock size={16} />
+                        Log Session
                       </button>
-                      <button style={styles.viewButton}>View Details</button>
+                      <button onClick={() => handleCompleteExchange(exchange)} style={styles.viewButton}>Complete Exchange</button>
                     </div>
                   </div>
                 ))
@@ -176,7 +209,7 @@ const Progress = ({ currentUser }) => {
                 </div>
               ) : (
                 completedExchanges.map((exchange) => (
-                  <div key={exchange.id} style={{...styles.exchangeCard, ...styles.completedCard}}>
+                  <div key={exchange.id} style={{ ...styles.exchangeCard, ...styles.completedCard }}>
                     <div style={styles.exchangeHeader}>
                       <div>
                         <h3 style={styles.exchangeTitle}>Exchange #{exchange.id}</h3>
@@ -184,7 +217,7 @@ const Progress = ({ currentUser }) => {
                           {new Date(exchange.startDate).toLocaleDateString()} - {new Date(exchange.endDate).toLocaleDateString()}
                         </p>
                       </div>
-                      <div style={{...styles.statusBadge, backgroundColor: '#d1fae5', color: '#065f46'}}>
+                      <div style={{ ...styles.statusBadge, backgroundColor: '#d1fae5', color: '#065f46' }}>
                         <CheckCircle size={14} />
                         Completed
                       </div>
