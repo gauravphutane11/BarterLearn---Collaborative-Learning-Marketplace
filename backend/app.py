@@ -1,5 +1,5 @@
 from extensions import db
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
@@ -8,21 +8,41 @@ from datetime import datetime
 import os
 import logging
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../dist', static_url_path='/')
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///barterlearn.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'super-secret')
 
-CORS(app) # Enable CORS for all routes
+# Fallback for development, but REQUIRE it in production
+jwt_secret = os.getenv('JWT_SECRET_KEY')
+if not jwt_secret and os.getenv('FLASK_ENV') == 'production':
+    raise RuntimeError("JWT_SECRET_KEY must be set in production")
+app.config['JWT_SECRET_KEY'] = jwt_secret or 'dev-secret-key'
+
+# Secure CORS
+allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
+CORS(app, origins=allowed_origins)
+
 db.init_app(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
 from models import User, Exchange
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/api/health', methods=['GET'])
 def health():
