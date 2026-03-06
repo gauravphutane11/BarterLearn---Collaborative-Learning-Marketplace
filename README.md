@@ -61,27 +61,29 @@ A modern web application that enables users to exchange skills and knowledge thr
 5. **Open your browser**
    Navigate to `http://localhost:3000` (frontend) and use API at `http://localhost:5000`
 
----
+### Production Deployment (Waitress)
 
-### Production Deployment Notes
+1.  **Build the Frontend**:
+    ```bash
+    npm install
+    npm run build
+    ```
+2.  **Setup the Backend**:
+    - Ensure `backend/requirements.txt` is installed: `pip install -r backend/requirements.txt`
+    - Configure environment variables in a `.env` file in the root:
+      ```env
+      FLASK_ENV=production
+      JWT_SECRET_KEY=your-secure-secret
+      DATABASE_URL=sqlite:///barterlearn.db
+      CORS_ORIGINS=https://your-domain.com
+      PORT=5000
+      ```
+3.  **Run with Waitress**:
+    ```bash
+    python backend/wsgi.py
+    ```
 
-Once the application is ready for production you'll need to:
-
-1. Build the React app (`npm run build`) and serve the static files with a web server (Nginx, Express, etc.).
-2. Configure the Flask backend for production (disable debug, set proper `JWT_SECRET_KEY`, use a real database such as PostgreSQL or MySQL, and enable HTTPS).
-3. Consider containerizing both front‑ and back‑ends with Docker and orchestrating with `docker-compose` or Kubernetes.
-4. Deploy the frontend to a static host (Vercel, Netlify, AWS S3/CloudFront) and the backend to a Python‑friendly service (Heroku, Azure App Service, AWS Elastic Beanstalk, etc.).
-5. Set environment variables on the hosting platform for secrets and database connection strings.
-
-Refer to the **🏗️ Project Structure** section above for more details on where to place files.
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-The production build will be created in the `dist` directory.
+The Flask server will now serve both the API (at `/api/*`) and the frontend (at `/`).
 
 ## 📱 Usage
 
