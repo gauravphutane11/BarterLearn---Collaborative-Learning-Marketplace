@@ -1,12 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 async function request(path, options = {}) {
   const token = localStorage.getItem('access_token');
   const headers = { 'Content-Type': 'application/json', ...options.headers };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  // if API_BASE is empty we rely on proxy and prefix '/api'
-  const url = (API_BASE ? API_BASE : '') + '/api' + path;
+  // Use API_BASE if provided, otherwise use relative path
+  const url = `${API_BASE}/api${path}`;
   const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => { });
