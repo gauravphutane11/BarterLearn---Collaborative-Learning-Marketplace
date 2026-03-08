@@ -58,12 +58,29 @@ def get_me():
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
-    if User.query.filter_by(email=data.get('email')).first():
+    
+    # Input validation
+    if not data:
+        return jsonify({'msg': 'No data provided'}), 400
+    
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    
+    if not name or len(name) < 2:
+        return jsonify({'msg': 'Name must be at least 2 characters long'}), 400
+    if not email or '@' not in email:
+        return jsonify({'msg': 'Valid email is required'}), 400
+    if not password or len(password) < 6:
+        return jsonify({'msg': 'Password must be at least 6 characters long'}), 400
+    
+    if User.query.filter_by(email=email).first():
         return jsonify({'msg': 'Email already registered'}), 400
+    
     user = User(
-        name=data.get('name'),
-        email=data.get('email'),
-        password=generate_password_hash(data.get('password'))
+        name=name,
+        email=email,
+        password=generate_password_hash(password)
     )
     db.session.add(user)
     db.session.commit()
