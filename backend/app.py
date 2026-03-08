@@ -20,11 +20,17 @@ logger = logging.getLogger(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///barterlearn.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Fallback for development, but REQUIRE it in production
+# JWT Secret Key Configuration
 jwt_secret = os.getenv('JWT_SECRET_KEY')
-if not jwt_secret and os.getenv('FLASK_ENV') == 'production':
-    raise RuntimeError("JWT_SECRET_KEY must be set in production")
-app.config['JWT_SECRET_KEY'] = jwt_secret or 'dev-secret-key'
+if not jwt_secret:
+    if os.getenv('FLASK_ENV') == 'production':
+        raise RuntimeError("JWT_SECRET_KEY environment variable must be set in production")
+    else:
+        # Generate a random secret for development
+        import secrets
+        jwt_secret = secrets.token_hex(32)
+        print("WARNING: Using auto-generated JWT secret for development. Set JWT_SECRET_KEY environment variable for production.")
+app.config['JWT_SECRET_KEY'] = jwt_secret
 
 # Secure CORS
 allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
