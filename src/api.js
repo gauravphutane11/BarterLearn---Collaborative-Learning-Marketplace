@@ -7,12 +7,60 @@ async function request(path, options = {}) {
 
   // Use API_BASE if provided, otherwise use relative path
   const url = `${API_BASE}/api${path}`;
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const err = await res.json().catch(() => { });
-    throw err || new Error('Network response was not ok');
+
+  try {
+    const res = await fetch(url, { ...options, headers });
+
+    if (!res.ok) {
+      let errorMessage = 'Network response was not ok';
+      let errorData = null;
+
+      try {
+        errorData = await res.json();
+        errorMessage = errorData.msg || errorData.message || errorMessage;
+      } catch (parseError) {
+        console.warn('Failed to parse error response as JSON:', parseError);
+      }
+
+      // Handle specific HTTP status codes
+      switch (res.status) {
+        case 400:
+          throw new Error(`Bad Request: ${errorMessage}`);
+        case 401:
+          // Clear invalid token
+          localStorage.removeItem('access_token');
+          throw new Error('Authentication required. Please log in again.');
+        case 403:
+          throw new Error('Access denied. You do not have permission for this action.');
+        case 404:
+          throw new Error('Resource not found.');
+        case 500:
+          throw new Error('Server error. Please try again later.');
+        default:
+          throw new Error(errorMessage);
+      }
+    }
+
+    return res.json();
+  } catch (error) {
+    // Log network errors
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      console.error('Network error:', error);
+      throw new Error('Network connection failed. Please check your internet connection.');
+    }
+
+    // Re-throw custom errors
+    if (error.message.includes('Bad Request') ||
+        error.message.includes('Authentication') ||
+        error.message.includes('Access denied') ||
+        error.message.includes('Server error') ||
+        error.message.includes('Network connection')) {
+      throw error;
+    }
+
+    // Re-throw other errors as-is
+    throw error;
   }
-  return res.json();
 }
 
 export const api = {
@@ -26,4 +74,5 @@ export const api = {
   createExchange: (data) => request('/exchanges', { method: 'POST', body: JSON.stringify(data) }),
   updateExchange: (id, data) => request(`/exchanges/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   getMatches: () => request('/matches'),
+  getStats: () => request('/stats'),
 };
