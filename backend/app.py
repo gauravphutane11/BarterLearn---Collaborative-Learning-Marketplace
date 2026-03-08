@@ -40,7 +40,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
-from models import User, Exchange
+from models import User, Exchange, Notification
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -250,6 +250,44 @@ def get_stats():
             'averageRating': round(avg_rating, 1) if avg_rating else 0
         }
     })
+
+@app.route('/api/notifications', methods=['GET'])
+@jwt_required()
+def get_notifications():
+    user_id = get_jwt_identity()
+    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
+    return jsonify([n.to_dict() for n in notifications])
+
+@app.route('/api/notifications', methods=['POST'])
+@jwt_required()
+def create_notification():
+    data = request.get_json()
+    
+    # Input validation
+    if not data or not data.get('title') or not data.get('message'):
+        return jsonify({'msg': 'Title and message are required'}), 400
+    
+    notification = Notification(
+        user_id=get_jwt_identity(),
+        title=data.get('title'),
+        message=data.get('message'),
+        type=data.get('type', 'info'),
+        related_exchange_id=data.get('relatedExchangeId')
+    )
+    db.session.add(notification)
+    db.session.commit()
+    return jsonify(notification.to_dict()), 201
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['PATCH'])
+@jwt_required()
+def mark_notification_read(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    if notification.user_id != get_jwt_identity():
+        return jsonify({'msg': 'Unauthorized'}), 403
+    
+    notification.read = True
+    db.session.commit()
+    return jsonify(notification.to_dict())
 
 # Error Handlers
 @app.errorhandler(404)

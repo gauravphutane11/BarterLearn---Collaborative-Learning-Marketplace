@@ -75,4 +75,7 @@ export const api = {
   updateExchange: (id, data) => request(`/exchanges/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   getMatches: () => request('/matches'),
   getStats: () => request('/stats'),
+  getNotifications: () => request('/notifications'),
+  createNotification: (data) => request('/notifications', { method: 'POST', body: JSON.stringify(data) }),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
 };

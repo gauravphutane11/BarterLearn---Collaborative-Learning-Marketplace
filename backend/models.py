@@ -55,3 +55,25 @@ class Exchange(db.Model):
             'endDate': self.end_date.isoformat() if self.end_date else None,
             'rating': self.rating
         }
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(128), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(32), default='info')  # info, success, warning, error
+    read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    related_exchange_id = db.Column(db.Integer, db.ForeignKey('exchange.id'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'userId': self.user_id,
+            'title': self.title,
+            'message': self.message,
+            'type': self.type,
+            'read': self.read,
+            'createdAt': self.created_at.isoformat() if self.created_at else None,
+            'relatedExchangeId': self.related_exchange_id
+        }
