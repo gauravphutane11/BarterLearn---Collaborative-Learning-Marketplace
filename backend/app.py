@@ -216,6 +216,41 @@ def get_matches():
     scored.sort(key=lambda x: x['compatibilityScore'], reverse=True)
     return jsonify(scored)
 
+@app.route('/api/stats', methods=['GET'])
+@jwt_required()
+def get_stats():
+    total_users = User.query.count()
+    total_exchanges = Exchange.query.count()
+    active_exchanges = Exchange.query.filter_by(status='active').count()
+    completed_exchanges = Exchange.query.filter_by(status='completed').count()
+    
+    # Get user's personal stats
+    user_id = get_jwt_identity()
+    user_exchanges = Exchange.query.filter(
+        (Exchange.user_id == user_id) | (Exchange.partner_id == user_id)
+    ).all()
+    
+    user_active = len([e for e in user_exchanges if e.status == 'active'])
+    user_completed = len([e for e in user_exchanges if e.status == 'completed'])
+    
+    # Calculate average rating
+    ratings = [e.rating for e in user_exchanges if e.rating is not None]
+    avg_rating = sum(ratings) / len(ratings) if ratings else 0
+    
+    return jsonify({
+        'global': {
+            'totalUsers': total_users,
+            'totalExchanges': total_exchanges,
+            'activeExchanges': active_exchanges,
+            'completedExchanges': completed_exchanges
+        },
+        'personal': {
+            'activeExchanges': user_active,
+            'completedExchanges': user_completed,
+            'averageRating': round(avg_rating, 1) if avg_rating else 0
+        }
+    })
+
 # Error Handlers
 @app.errorhandler(404)
 def not_found(error):
