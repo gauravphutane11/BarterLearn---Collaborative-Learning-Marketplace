@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 import logging
+import secrets
 
 app = Flask(__name__, static_folder='../dist', static_url_path='/')
 
@@ -27,7 +28,6 @@ if not jwt_secret:
         raise RuntimeError("JWT_SECRET_KEY environment variable must be set in production")
     else:
         # Generate a random secret for development
-        import secrets
         jwt_secret = secrets.token_hex(32)
         print("WARNING: Using auto-generated JWT secret for development. Set JWT_SECRET_KEY environment variable for production.")
 app.config['JWT_SECRET_KEY'] = jwt_secret
