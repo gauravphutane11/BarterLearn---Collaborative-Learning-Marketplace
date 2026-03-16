@@ -171,6 +171,10 @@ barterlearn/
 - **Dynamic Interactions**: Smooth micro-animations and hover effects
 - **Responsive Layout**: Optimized for all screen sizes
 
+## 🆕 Recent Updates
+- Added `hover-scale` utility class in global styles.
+- Fortified progress calculations against division by zero errors.
+
 ## 🔮 Future Enhancements
 
 ### Technical
