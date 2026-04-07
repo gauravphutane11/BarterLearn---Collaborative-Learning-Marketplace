@@ -136,6 +136,9 @@ def get_exchanges():
 @jwt_required()
 def create_exchange():
     current_user = User.query.get(get_jwt_identity())
+    if not current_user:
+        return jsonify({'msg': 'User not found'}), 404
+    
     data = request.get_json()
     exchange = Exchange(
         user_id=get_jwt_identity(),

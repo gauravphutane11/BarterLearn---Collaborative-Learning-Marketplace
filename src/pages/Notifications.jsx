@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, X, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Bell, Check, X, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { api } from '../api';
 
 const Notifications = ({ currentUser, updateUnread }) => {
@@ -123,7 +123,7 @@ const styles = {
     maxWidth: '800px',
     margin: '0 auto',
     padding: '20px',
-    background: 'var(--bg-primary)',
+    background: 'var(--bg-white)',
     minHeight: '100vh'
   },
   header: {
@@ -142,7 +142,7 @@ const styles = {
   title: {
     fontSize: '24px',
     fontWeight: 'bold',
-    color: 'var(--text-primary)',
+    color: 'var(--text-dark)',
     margin: 0
   },
   badge: {
@@ -173,7 +173,7 @@ const styles = {
     alignItems: 'flex-start',
     gap: '15px',
     padding: '20px',
-    background: 'var(--bg-secondary)',
+    background: 'var(--bg-slate)',
     borderRadius: '8px',
     border: '1px solid var(--border-color)',
     transition: 'box-shadow 0.2s'
@@ -192,18 +192,18 @@ const styles = {
   notificationTitle: {
     fontSize: '16px',
     fontWeight: '600',
-    color: 'var(--text-primary)',
+    color: 'var(--text-dark)',
     margin: '0 0 5px 0'
   },
   notificationMessage: {
     fontSize: '14px',
-    color: 'var(--text-secondary)',
+    color: 'var(--text-medium)',
     margin: '0 0 10px 0',
     lineHeight: '1.4'
   },
   notificationTime: {
     fontSize: '12px',
-    color: 'var(--text-muted)',
+    color: 'var(--text-light)',
     fontStyle: 'italic'
   },
   markReadBtn: {
@@ -218,13 +218,13 @@ const styles = {
   empty: {
     textAlign: 'center',
     padding: '60px 20px',
-    color: 'var(--text-muted)'
+    color: 'var(--text-light)'
   },
   loading: {
     textAlign: 'center',
     padding: '40px',
     fontSize: '16px',
-    color: 'var(--text-secondary)'
+    color: 'var(--text-medium)'
   }
 };
 
