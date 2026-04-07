@@ -1,15 +1,16 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, Users, Video, TrendingUp, LogOut } from 'lucide-react';
+import { Home, User, Users, Video, TrendingUp, Bell, LogOut } from 'lucide-react';
 
-const Navbar = ({ currentUser, onLogout }) => {
+const Navbar = ({ currentUser, onLogout, unreadNotifications }) => {
   const location = useLocation();
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/profile', icon: User, label: 'Profile' },
     { path: '/matching', icon: Users, label: 'Match' },
-    { path: '/progress', icon: TrendingUp, label: 'Progress' }
+    { path: '/progress', icon: TrendingUp, label: 'Progress' },
+    { path: '/notifications', icon: Bell, label: 'Notifications', badge: unreadNotifications }
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -46,6 +47,9 @@ const Navbar = ({ currentUser, onLogout }) => {
             >
               <item.icon size={20} />
               <span>{item.label}</span>
+              {item.badge > 0 && (
+                <span style={styles.badge}>{item.badge}</span>
+              )}
             </Link>
           ))}
         </div>
@@ -136,6 +140,15 @@ const styles = {
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+  },
+  badge: {
+    background: '#ef4444',
+    color: 'white',
+    borderRadius: '10px',
+    padding: '2px 6px',
+    fontSize: '10px',
+    fontWeight: 'bold',
+    marginLeft: '4px'
   },
   userSection: {
     display: 'flex',

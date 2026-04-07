@@ -135,6 +135,7 @@ def get_exchanges():
 @app.route('/api/exchanges', methods=['POST'])
 @jwt_required()
 def create_exchange():
+    current_user = User.query.get(get_jwt_identity())
     data = request.get_json()
     exchange = Exchange(
         user_id=get_jwt_identity(),
@@ -147,6 +148,20 @@ def create_exchange():
     )
     db.session.add(exchange)
     db.session.commit()
+    
+    # Create notification for partner
+    partner = User.query.get(data.get('partner_id'))
+    if partner:
+        notification = Notification(
+            user_id=partner.id,
+            title='New Exchange Request',
+            message=f'{current_user.name} wants to exchange {data.get("skill")} for your {data.get("partner_skill")}',
+            type='info',
+            related_exchange_id=exchange.id
+        )
+        db.session.add(notification)
+        db.session.commit()
+    
     return jsonify(exchange.to_dict()), 201
 
 @app.route('/api/exchanges/<int:exchange_id>', methods=['PATCH'])

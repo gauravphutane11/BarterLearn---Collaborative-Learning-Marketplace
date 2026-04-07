@@ -6,12 +6,14 @@ import Profile from './pages/Profile';
 import Matching from './pages/Matching';
 import VideoChat from './pages/VideoChat';
 import Progress from './pages/Progress';
+import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import { api } from './api';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const handleLogin = async (email, password) => {
     try {
@@ -21,6 +23,10 @@ function App() {
       setCurrentUser(me);
       const all = await api.getUsers();
       setUsers(all);
+      // Fetch unread notifications count
+      const notifications = await api.getNotifications();
+      const unread = notifications.filter(n => !n.read).length;
+      setUnreadNotifications(unread);
     } catch (err) {
       console.error('login failed', err);
       alert(err.msg || 'Login failed');
@@ -30,23 +36,25 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     setCurrentUser(null);
+    setUnreadNotifications(0);
   };
 
-  const updateUserProfile = async (updatedUser) => {
-    try {
-      const res = await api.updateUser(updatedUser.id, updatedUser);
-      setUsers(users.map(u => u.id === res.id ? res : u));
-      setCurrentUser(res);
-    } catch (err) {
-      console.error('update failed', err);
-      alert(err.msg || 'Update failed');
+  const updateUnreadNotifications = async () => {
+    if (currentUser) {
+      try {
+        const notifications = await api.getNotifications();
+        const unread = notifications.filter(n => !n.read).length;
+        setUnreadNotifications(unread);
+      } catch (err) {
+        console.error('Failed to update notifications', err);
+      }
     }
   };
 
   return (
     <Router>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} />}
+        {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} unreadNotifications={unreadNotifications} />}
 
         <Routes>
           <Route
@@ -90,6 +98,13 @@ function App() {
             path="/progress"
             element={
               currentUser ? <Progress currentUser={currentUser} /> : <Navigate to="/login" />
+            }
+          />
+
+          <Route
+            path="/notifications"
+            element={
+              currentUser ? <Notifications currentUser={currentUser} updateUnread={updateUnreadNotifications} /> : <Navigate to="/login" />
             }
           />
         </Routes>
