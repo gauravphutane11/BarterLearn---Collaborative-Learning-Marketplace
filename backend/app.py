@@ -4,12 +4,16 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
 from datetime import datetime
 import os
 import logging
 import secrets
 
-app = Flask(__name__, static_folder='../dist', static_url_path='/')
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
+
+app = Flask(__name__, static_folder=os.path.join(basedir, '../dist'), static_url_path='/')
 
 # Configure logging
 logging.basicConfig(
@@ -120,9 +124,19 @@ def update_user(user_id):
         return jsonify({'msg': 'Unauthorized'}), 403
     data = request.get_json()
     user = User.query.get_or_404(user_id)
-    for field in ['name','bio','skills_offered','skills_wanted','avatar']:
-        if field in data:
-            setattr(user, field, data[field])
+
+    mapped_updates = {
+        'name': data.get('name'),
+        'bio': data.get('bio'),
+        'avatar': data.get('avatar'),
+        'skills_offered': data.get('skills_offered') or data.get('skillsOffered'),
+        'skills_wanted': data.get('skills_wanted') or data.get('skillsWanted')
+    }
+
+    for field, value in mapped_updates.items():
+        if value is not None:
+            setattr(user, field, value)
+
     db.session.commit()
     return jsonify(user.to_dict())
 

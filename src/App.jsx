@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -14,6 +14,26 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token && !currentUser) {
+      api.getMe()
+        .then((me) => setCurrentUser(me))
+        .catch(() => localStorage.removeItem('access_token'));
+    }
+  }, [currentUser]);
+
+  const updateUserProfile = async (data) => {
+    try {
+      const updatedUser = await api.updateUser(currentUser.id, data);
+      setCurrentUser(updatedUser);
+      alert('Profile updated successfully');
+    } catch (err) {
+      console.error('Profile update failed', err);
+      alert(err.message || 'Unable to update profile');
+    }
+  };
 
   const handleLogin = async (email, password) => {
     try {

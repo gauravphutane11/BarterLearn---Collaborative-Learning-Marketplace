@@ -1,250 +1,93 @@
-# BarterLearn - Collaborative Learning Marketplace 📚
+# BarterLearn
 
-A modern web application that enables users to exchange skills and knowledge through a collaborative learning platform. Built as a software engineering project prototype with React and modern web technologies.
+A simplified collaborative learning marketplace prototype using React and Flask.
 
-## 🌟 Features
+## Project structure
 
-### Core Functionality
-- **User Profiles**: Create and manage personal learning profiles with skills offered and wanted
-- **Smart Matching System**: Algorithm-based matching that pairs users with complementary skills
-- **Video Chat Interface**: Live learning sessions with video/audio controls and chat
-- **Progress Tracking**: Monitor active and completed skill exchanges with detailed analytics
-- **Responsive Design**: Works seamlessly on both desktop and mobile devices
+- `backend/` � Flask API, data models, and database
+- `src/` � React frontend application
+- `package.json` � frontend dependencies and startup scripts
+- `vite.config.js` � Vite dev server configuration and backend proxy
+- `backend/barterlearn.db` � default SQLite file created locally
 
-### Key Highlights
-- 🎯 Intelligent matching algorithm that calculates compatibility scores
-- 🎥 Simulated video chat environment (ready for WebRTC integration)
-- 📊 Real-time progress tracking and session management
-- 💬 In-session chat functionality
-- ⭐ User ratings and review system
-- 📈 Personal learning statistics dashboard
+## Technology stack
 
-## 🚀 Getting Started
+- Frontend: React 18, Vite, React Router
+- Backend: Python Flask, Flask-SQLAlchemy, Flask-JWT-Extended
+- Database: SQLite by default
+- Production server: Waitress via `backend/wsgi.py`
 
-### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn package manager
+## How to run locally
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/barterlearn.git
-   cd barterlearn
-   ```
-
-2. **Install frontend dependencies**
-   ```bash
+1. Install frontend dependencies:
+   ```powershell
    npm install
    ```
 
-3. **Set up the backend**
-   ```bash
+2. Install backend dependencies:
+   ```powershell
    cd backend
-   python -m venv venv             # create virtual environment
-   venv\Scripts\activate         # Windows activate
+   python -m venv venv
+   venv\Scripts\activate
    pip install -r requirements.txt
-   flask db init                   # initialize migrations
-   flask db migrate -m "initial"
-   flask db upgrade   # optionally populate sample users
-   python seed.py   ```
-   Create a `.env` file with at least:
-   ```env
-   JWT_SECRET_KEY=your_jwt_secret
-   DATABASE_URL=sqlite:///barterlearn.db
    ```
 
-4. **Start both servers**
-   - backend: `cd backend && flask run`
-   - frontend: back in root `npm run dev`
+3. Create backend environment file:
+   ```powershell
+   copy backend\.env.example backend\.env
+   ```
+   Edit `backend/.env` if needed.
 
-5. **Open your browser**
-   Navigate to `http://localhost:3000` (frontend) and use API at `http://localhost:5000`
+4. Create or update the database:
+   ```powershell
+   cd backend
+   python -m flask --app app.py db init
+   python -m flask --app app.py db migrate -m "initial"
+   python -m flask --app app.py db upgrade
+   ```
 
-### Production Deployment (Waitress)
+5. Seed sample users (optional):
+   ```powershell
+   python seed.py
+   ```
 
-1.  **Build the Frontend**:
-    ```bash
-    npm install
-    npm run build
-    ```
-2.  **Setup the Backend**:
-    - Ensure `backend/requirements.txt` is installed: `pip install -r backend/requirements.txt`
-    - Configure environment variables in a `.env` file in the root:
-      ```env
-      FLASK_ENV=production
-      JWT_SECRET_KEY=your-secure-secret
-      DATABASE_URL=sqlite:///barterlearn.db
-      CORS_ORIGINS=https://your-domain.com
-      PORT=5000
-      ```
-3.  **Run with Waitress**:
-    ```bash
-    python backend/wsgi.py
-    ```
+6. Start the backend server:
+   ```powershell
+   python -m flask --app app.py run
+   ```
 
-The Flask server will now serve both the API (at `/api/*`) and the frontend (at `/`).
+7. Start the frontend app:
+   ```powershell
+   cd ..
+   npm start
+   ```
 
-## 📱 Usage
+8. Open the app in your browser:
+   - Frontend: `http://localhost:3000`
+   - Backend API: `http://localhost:5000`
 
-### Logging In
-1. On the login page, select any user from the dropdown (demo mode)
-2. Each user has different skills and learning goals
+## Production build
 
-### Navigating the Platform
+1. Build the frontend:
+   ```powershell
+   npm run build
+   ```
 
-#### Home Dashboard
-- View your statistics and recent activity
-- See suggested matches
-- Quick access to key features
+2. Start the production backend from the `backend` folder:
+   ```powershell
+   cd backend
+   python wsgi.py
+   ```
 
-#### Profile Management
-- Update your bio
-- Add skills you can teach
-- Add skills you want to learn
-- View your rating and completed exchanges
+3. The backend will serve the built frontend from `../dist` and the API from `/api/*`.
 
-#### Finding Matches
-- Browse compatible learning partners
-- View detailed compatibility scores
-- See mutual exchange opportunities
-- Connect with matches
+## Notes
 
-#### Video Sessions
-- Start live learning sessions (UI prototype)
-- Control video, audio, and screen sharing
-- Use in-session chat
-- Track session duration
+- The frontend now correctly proxies `/api/*` requests to the Flask backend.
+- Profile updates work with both frontend camelCase fields and backend snake_case fields.
+- The backend loads environment variables from `backend/.env`.
+- The app was simplified to make startup and development easier.
 
-#### Progress Tracking
-- View active exchanges
-- Monitor learning progress
-- See completed exchanges
-- Access certificates and reviews
+## More details
 
-## 🏗️ Project Structure
-
-```
-barterlearn/
-├── backend/                   # Python/Flask API
-│   ├── app.py                 # Flask application
-│   ├── models.py              # SQLAlchemy models
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # environment variables (JWT secret, DATABASE_URL)
-├── public/
-├── src/
-│   ├── components/
-│   │   └── Navbar.jsx          # Navigation component
-│   ├── pages/
-│   │   ├── Home.jsx             # Dashboard
-│   │   ├── Login.jsx            # Authentication
-│   │   ├── Profile.jsx          # User profile management
-│   │   ├── Matching.jsx         # Partner matching
-│   │   ├── VideoChat.jsx        # Live session interface
-│   │   └── Progress.jsx         # Progress tracking
-│   ├── data/
-│   │   └── staticData.js        # Static lists (skills etc.)
-
-│   ├── App.jsx                  # Main app component
-│   ├── main.jsx                 # Entry point
-│   └── index.css                # Global styles
-├── index.html
-├── package.json
-├── vite.config.js
-├── README.md
-```
-
-## 🛠️ Technology Stack
-
-- **Frontend Framework**: React 18
-- **Routing**: React Router v6
-- **Build Tool**: Vite
-- **Icons**: Lucide React
-- **Styling**: CSS-in-JS (inline styles)
-- **State Management**: React Hooks (useState, useEffect)
-
-## 🎨 Design Features
-
-- **Premium Dark Mode**: Sophisticated dark theme with harmonious indigo and emerald accents
-- **Modern Typography**: Integrated 'Inter' and 'Outfit' Google Fonts for a professional aesthetic
-- **Glassmorphism**: Elegant card designs with background blur and subtle borders
-- **Dynamic Interactions**: Smooth micro-animations and hover effects
-- **Responsive Layout**: Optimized for all screen sizes
-
-## 🆕 Recent Updates
-- Daily update: 2026-03-19
-- Added `hover-scale` utility class in global styles.
-- Fortified progress calculations against division by zero errors.
-
-## 🔮 Future Enhancements
-
-### Technical
-- [ ] Backend API integration (Node.js/Express or similar)
-- [ ] Database setup (MongoDB/PostgreSQL)
-- [ ] Real WebRTC video chat implementation
-- [ ] Real-time notifications (WebSocket/Socket.io)
-- [ ] User authentication (JWT/OAuth)
-- [ ] Email notifications
-- [ ] Calendar integration
-
-### Features
-- [ ] Advanced search and filtering
-- [ ] Group learning sessions
-- [ ] Skill certification system
-- [ ] Payment integration for premium features
-- [ ] Mobile apps (React Native)
-- [ ] AI-powered skill recommendations
-- [ ] Learning resources library
-- [ ] Gamification (badges, achievements)
-
-## 📝 Notes for Development
-
-### Current Implementation
-This is a **prototype/demo** version with:
-- Mock data for users and exchanges
-- Simulated video chat interface
-- Client-side only (no backend)
-- Demo authentication (no real auth)
-
-### For Production Deployment
-You'll need to add:
-1. **Backend API** for data persistence
-2. **Database** for user and exchange data
-3. **Real video chat** using WebRTC or services like Agora/Twilio
-4. **Authentication system** with proper security
-5. **Payment processing** if monetizing
-6. **Hosting** on platforms like Vercel, Netlify, or AWS
-
-## 🤝 Contributing
-
-This is a software engineering project prototype. If you'd like to contribute:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👥 Authors
-
-- Your Name - Initial work - [YourGitHub](https://github.com/yourusername)
-
-## 🙏 Acknowledgments
-
-- React community for excellent documentation
-- Lucide for beautiful icon set
-- All open-source contributors
-
-## 📞 Support
-
-For support or questions about this project:
-- Open an issue on GitHub
-- Contact: your.email@example.com
-
----
-
-**Note**: This is a prototype built for educational purposes as part of a software engineering course project. It demonstrates key concepts in modern web development, component architecture, and user experience design.
+See `PROJECT_OVERVIEW.md` for architecture, workflow, and code responsibilities.
