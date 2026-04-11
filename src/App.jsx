@@ -19,7 +19,15 @@ function App() {
     const token = localStorage.getItem('access_token');
     if (token && !currentUser) {
       api.getMe()
-        .then((me) => setCurrentUser(me))
+        .then(async (me) => {
+          setCurrentUser(me);
+          try {
+            const allUsers = await api.getUsers();
+            setUsers(allUsers);
+          } catch (err) {
+            console.error('Failed to load users after auth', err);
+          }
+        })
         .catch(() => localStorage.removeItem('access_token'));
     }
   }, [currentUser]);
@@ -49,7 +57,7 @@ function App() {
       setUnreadNotifications(unread);
     } catch (err) {
       console.error('login failed', err);
-      alert(err.msg || 'Login failed');
+      alert(err.message || 'Login failed');
     }
   };
 

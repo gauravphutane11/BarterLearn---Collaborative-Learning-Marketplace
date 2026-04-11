@@ -15,15 +15,28 @@ const Matching = ({ currentUser }) => {
   const fetchMatches = async () => {
     try {
       const data = await api.getMatches();
-      setMatches(data.map(u => ({ user: u, matchScore: u.compatibilityScore || 0, commonSkills: [], mutualExchange: false })));
+      setMatches(data);
     } catch (err) {
       console.error('failed to fetch matches', err);
       setMatches([]);
     }
   };
 
-  const handleConnect = (match) => {
-    alert(`Connection request sent to ${match.user.name}! 🎉\n\nIn a real app, this would send a notification and create a chat.`);
+  const handleConnect = async (match) => {
+    try {
+      const skill = currentUser.skillsOffered?.[0] || 'Skill Exchange';
+      const partnerSkill = currentUser.skillsWanted?.[0] || match.user.skillsOffered?.[0] || 'Skill Exchange';
+      const res = await api.createExchange({
+        partner_id: match.user.id,
+        skill,
+        partner_skill: partnerSkill,
+        total_sessions: 5
+      });
+      alert(`Connection request sent to ${match.user.name}! 🎉\nExchange #${res.id} has been created.`);
+    } catch (err) {
+      console.error('failed to create exchange', err);
+      alert(err.message || 'Unable to connect with this match right now.');
+    }
   };
 
   return (
