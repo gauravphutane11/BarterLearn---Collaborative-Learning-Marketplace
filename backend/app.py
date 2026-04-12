@@ -8,31 +8,37 @@ from dotenv import load_dotenv
 from datetime import datetime
 import os
 import logging
-import secrets
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
-app = Flask(__name__, static_folder=os.path.join(basedir, '../frontend/dist'), static_url_path='/')
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+app = Flask(
+    __name__,
+    static_folder=os.path.join(basedir, '../frontend/dist'),
+    static_url_path='/'
 )
+
+# Logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Database
 db_url = os.getenv('DATABASE_URL', 'sqlite:///barterlearn.db')
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# JWT Secret Key Configuration
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key-replace-in-prod')
+# JWT
+app.config['JWT_SECRET_KEY'] = os.getenv(
+    'JWT_SECRET_KEY',
+    'super-secret-key-change-this'
+)
 
-# Secure CORS
-CORS(app, origins="*")
+# CORS
+CORS(app)
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -43,99 +49,131 @@ from models import User, Exchange, Notification
 with app.app_context():
     db.create_all()
 
+
+# -------------------------
+# FRONTEND SERVE
+# -------------------------
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/api/health', methods=['GET'])
+
+# -------------------------
+# HEALTH
+# -------------------------
+
+@app.route('/api/health')
 def health():
-    return jsonify({'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}), 200
+    return jsonify({"status": "ok"})
 
-@app.route('/api/me', methods=['GET'])
-@jwt_required()
-def get_me():
-    user_id = get_jwt_identity()
-    user = User.query.get_or_404(user_id)
-    return jsonify(user.to_dict())
+
+# -------------------------
+# AUTH
+# -------------------------
 
 @app.route('/api/register', methods=['POST'])
 def register():
+
     data = request.get_json()
-    
-    # Input validation
+
     if not data:
         return jsonify({'msg': 'No data provided'}), 400
-    
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip().lower()
-    password = str(data.get('password', ''))
-    
-    if not name or len(str(name)) < 2:
-        return jsonify({'msg': 'Name must be at least 2 characters long'}), 400
-    if not email or '@' not in str(email):
-        return jsonify({'msg': 'Valid email is required'}), 400
-    if not password:
-        return jsonify({'msg': 'Password is required'}), 400
-    
+
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+
+    if not name or not email or not password:
+        return jsonify({'msg': 'Missing fields'}), 400
+
     if User.query.filter_by(email=email).first():
         return jsonify({'msg': 'Email already registered'}), 400
-    
+
     user = User(
         name=name,
-        email=email,
+        email=email.lower(),
         password=generate_password_hash(password)
     )
+
     db.session.add(user)
     db.session.commit()
+
     return jsonify({'msg': 'User created'}), 201
+
 
 @app.route('/api/login', methods=['POST'])
 def login():
+
     data = request.get_json()
+
     user = User.query.filter_by(email=data.get('email')).first()
-    password = str(data.get('password', ''))
-    if not user or not check_password_hash(user.password, password):
+
+    if not user or not check_password_hash(user.password, data.get('password')):
         return jsonify({'msg': 'Bad credentials'}), 401
-    access_token = create_access_token(identity=str(user.id))
+
+    access_token = create_access_token(identity=user.id)
+
     return jsonify({'access_token': access_token})
 
-@app.route('/api/users', methods=['GET'])
+
+@app.route('/api/me')
+@jwt_required()
+def get_me():
+
+    user_id = get_jwt_identity()
+
+    user = User.query.get_or_404(user_id)
+
+    return jsonify(user.to_dict())
+
+
+# -------------------------
+# USERS
+# -------------------------
+
+@app.route('/api/users')
 @jwt_required()
 def get_users():
+
     users = User.query.all()
+
     return jsonify([u.to_dict() for u in users])
 
-@app.route('/api/users/<int:user_id>', methods=['GET'])
+
+@app.route('/api/users/<int:user_id>')
 @jwt_required()
 def get_user(user_id):
+
     user = User.query.get_or_404(user_id)
+
     return jsonify(user.to_dict())
+
 
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
-    try:
-        current_user_id = int(get_jwt_identity())
 
-        if current_user_id != user_id:
+    try:
+
+        current_user = int(get_jwt_identity())
+
+        if current_user != user_id:
             return jsonify({'msg': 'Unauthorized'}), 403
 
         data = request.get_json()
+
+        if not isinstance(data, dict):
+            return jsonify({'msg': 'Invalid data'}), 400
+
         user = User.query.get_or_404(user_id)
 
-        # Update allowed fields
-        if 'name' in data:
-            user.name = data['name']
-
-        if 'bio' in data:
-            user.bio = data['bio']
-
-        if 'avatar' in data:
-            user.avatar = data['avatar']
+        user.name = data.get('name', user.name)
+        user.bio = data.get('bio', user.bio)
+        user.avatar = data.get('avatar', user.avatar)
 
         if 'skillsOffered' in data:
             user.skills_offered = data['skillsOffered']
@@ -145,202 +183,88 @@ def update_user(user_id):
 
         db.session.commit()
 
-        return jsonify(user.to_dict()), 200
+        return jsonify(user.to_dict())
 
     except Exception as e:
-        print("UPDATE PROFILE ERROR:", e)
+
+        logger.error(e)
+
         return jsonify({'msg': 'Server error updating profile'}), 500
 
-@app.route('/api/exchanges', methods=['GET'])
-@jwt_required()
-def get_exchanges():
-    exchanges = Exchange.query.all()
-    return jsonify([e.to_dict() for e in exchanges])
 
-@app.route('/api/exchanges', methods=['POST'])
-@jwt_required()
-def create_exchange():
-    current_user = User.query.get(get_jwt_identity())
-    if not current_user:
-        return jsonify({'msg': 'User not found'}), 404
-    
-    data = request.get_json()
-    exchange = Exchange(
-        user_id=get_jwt_identity(),
-        partner_id=data.get('partner_id'),
-        skill=data.get('skill'),
-        partner_skill=data.get('partner_skill'),
-        status='active',
-        total_sessions=data.get('total_sessions', 10),
-        start_date=datetime.utcnow()
-    )
-    db.session.add(exchange)
-    db.session.commit()
-    
-    # Create notification for partner
-    partner = User.query.get(data.get('partner_id'))
-    if partner:
-        notification = Notification(
-            user_id=partner.id,
-            title='New Exchange Request',
-            message=f'{current_user.name} wants to exchange {data.get("skill")} for your {data.get("partner_skill")}',
-            type='info',
-            related_exchange_id=exchange.id
-        )
-        db.session.add(notification)
-        db.session.commit()
-    
-    return jsonify(exchange.to_dict()), 201
+# -------------------------
+# MATCHES
+# -------------------------
 
-@app.route('/api/exchanges/<int:exchange_id>', methods=['PATCH'])
+@app.route('/api/matches')
 @jwt_required()
-def update_exchange(exchange_id):
-    exchange = Exchange.query.get_or_404(exchange_id)
-    if exchange.user_id != get_jwt_identity() and exchange.partner_id != get_jwt_identity():
-        return jsonify({'msg': 'Unauthorized'}), 403
-    
-    data = request.get_json()
-    if 'status' in data:
-        exchange.status = data['status']
-        if data['status'] == 'completed':
-            exchange.end_date = datetime.utcnow()
-            # Update user stats
-            user = User.query.get(exchange.user_id)
-            partner = User.query.get(exchange.partner_id)
-            user.completed_exchanges += 1
-            partner.completed_exchanges += 1
-            
-    if 'sessions_completed' in data:
-        exchange.sessions_completed = data['sessions_completed']
-    if 'rating' in data:
-        exchange.rating = data['rating']
-        
-    db.session.commit()
-    return jsonify(exchange.to_dict())
+def matches():
 
-@app.route('/api/matches', methods=['GET'])
-@jwt_required()
-def get_matches():
-    me_id = get_jwt_identity()
-    me = User.query.get_or_404(me_id)
-    others = User.query.filter(User.id != me_id).all()
-    
-    def get_common_skills(u):
+    me = User.query.get(get_jwt_identity())
+
+    others = User.query.filter(User.id != me.id).all()
+
+    results = []
+
+    for u in others:
+
         learn = list(set(me.skills_wanted) & set(u.skills_offered))
         teach = list(set(me.skills_offered) & set(u.skills_wanted))
-        return learn, teach
 
-    scored = []
-    for u in others:
-        learn, teach = get_common_skills(u)
-        
-        # Calculate compatibility score
-        # 20 points for each skill they can teach you (max 60)
-        # 10 points for each skill you can teach them (max 30)
-        # 10 points for high ratings (max 10)
-        score = (len(learn) * 20) + (len(teach) * 10) + (u.rating * 2)
-        
-        # Cap at 100%
-        display_score = min(score, 100)
-        
-        common_skills_data = []
-        for s in learn:
-            common_skills_data.append({'type': 'learn', 'skill': s})
-        for s in teach:
-            common_skills_data.append({'type': 'teach', 'skill': s})
+        score = (len(learn) * 20) + (len(teach) * 10)
 
-        scored.append({
+        results.append({
             **u.to_dict(),
-            'compatibilityScore': display_score,
-            'commonSkills': common_skills_data,
-            'mutualExchange': len(learn) > 0 and len(teach) > 0
+            "compatibilityScore": min(score, 100),
+            "mutualExchange": len(learn) > 0 and len(teach) > 0
         })
-    
-    scored.sort(key=lambda x: x['compatibilityScore'], reverse=True)
-    return jsonify(scored)
 
-@app.route('/api/stats', methods=['GET'])
+    results.sort(key=lambda x: x['compatibilityScore'], reverse=True)
+
+    return jsonify(results)
+
+
+# -------------------------
+# EXCHANGES
+# -------------------------
+
+@app.route('/api/exchanges')
 @jwt_required()
-def get_stats():
-    total_users = User.query.count()
-    total_exchanges = Exchange.query.count()
-    active_exchanges = Exchange.query.filter_by(status='active').count()
-    completed_exchanges = Exchange.query.filter_by(status='completed').count()
-    
-    # Get user's personal stats
+def exchanges():
+
+    data = Exchange.query.all()
+
+    return jsonify([e.to_dict() for e in data])
+
+
+# -------------------------
+# NOTIFICATIONS
+# -------------------------
+
+@app.route('/api/notifications')
+@jwt_required()
+def notifications():
+
     user_id = get_jwt_identity()
-    user_exchanges = Exchange.query.filter(
-        (Exchange.user_id == user_id) | (Exchange.partner_id == user_id)
-    ).all()
-    
-    user_active = len([e for e in user_exchanges if e.status == 'active'])
-    user_completed = len([e for e in user_exchanges if e.status == 'completed'])
-    
-    # Calculate average rating
-    ratings = [e.rating for e in user_exchanges if e.rating is not None]
-    avg_rating = sum(ratings) / len(ratings) if ratings else 0
-    
-    return jsonify({
-        'global': {
-            'totalUsers': total_users,
-            'totalExchanges': total_exchanges,
-            'activeExchanges': active_exchanges,
-            'completedExchanges': completed_exchanges
-        },
-        'personal': {
-            'activeExchanges': user_active,
-            'completedExchanges': user_completed,
-            'averageRating': round(avg_rating, 1) if avg_rating else 0
-        }
-    })
 
-@app.route('/api/notifications', methods=['GET'])
-@jwt_required()
-def get_notifications():
-    user_id = get_jwt_identity()
-    notifications = Notification.query.filter_by(user_id=user_id).order_by(Notification.created_at.desc()).all()
-    return jsonify([n.to_dict() for n in notifications])
+    notes = Notification.query.filter_by(user_id=user_id).all()
 
-@app.route('/api/notifications', methods=['POST'])
-@jwt_required()
-def create_notification():
-    data = request.get_json()
-    
-    # Input validation
-    if not data or not data.get('title') or not data.get('message'):
-        return jsonify({'msg': 'Title and message are required'}), 400
-    
-    notification = Notification(
-        user_id=get_jwt_identity(),
-        title=data.get('title'),
-        message=data.get('message'),
-        type=data.get('type', 'info'),
-        related_exchange_id=data.get('relatedExchangeId')
-    )
-    db.session.add(notification)
-    db.session.commit()
-    return jsonify(notification.to_dict()), 201
+    return jsonify([n.to_dict() for n in notes])
 
-@app.route('/api/notifications/<int:notification_id>/read', methods=['PATCH'])
-@jwt_required()
-def mark_notification_read(notification_id):
-    notification = Notification.query.get_or_404(notification_id)
-    if notification.user_id != get_jwt_identity():
-        return jsonify({'msg': 'Unauthorized'}), 403
-    
-    notification.read = True
-    db.session.commit()
-    return jsonify(notification.to_dict())
 
-# Error Handlers
+# -------------------------
+# ERROR HANDLING
+# -------------------------
+
 @app.errorhandler(404)
-def not_found(error):
-    return jsonify({'msg': 'Resource not found'}), 404
+def not_found(e):
+    return jsonify({'msg': 'Not found'}), 404
+
 
 @app.errorhandler(500)
-def server_error(error):
-    logger.error(f"Server Error: {error}")
-    return jsonify({'msg': 'Internal server error'}), 500
+def server_error(e):
+    return jsonify({'msg': 'Server error'}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
