@@ -1,163 +1,153 @@
-from extensions import db
-from flask import Flask, jsonify, request, send_from_directory
-from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity
+)
 from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv
+from extensions import db
+from models import User, Exchange, Notification
 import os
-import logging
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, ".env"))
+app = Flask(__name__)
 
-app = Flask(
-    __name__,
-    static_folder=os.path.join(basedir, "../frontend/dist"),
-    static_url_path="/"
+# -----------------------------
+# Configuration
+# -----------------------------
+
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///barterlearn.db"
 )
 
-# -----------------------
-# Logging
-# -----------------------
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# -----------------------
-# Database
-# -----------------------
-
-db_url = os.getenv("DATABASE_URL", "sqlite:///barterlearn.db")
-
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# -----------------------
-# JWT
-# -----------------------
-
-app.config["JWT_SECRET_KEY"] = os.getenv(
-    "JWT_SECRET_KEY",
-    "super-secret-key-change-this"
-)
-
-# -----------------------
-# CORS
-# -----------------------
-
-CORS(app)
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-key")
 
 db.init_app(app)
-migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
-from models import User, Exchange, Notification
+CORS(app, origins="*")
+
+# -----------------------------
+# Create tables
+# -----------------------------
 
 with app.app_context():
     db.create_all()
 
-# -----------------------
-# FRONTEND SERVE
-# -----------------------
+# -----------------------------
+# Root Route
+# -----------------------------
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def serve(path):
-    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
+@app.route("/")
+def home():
+    return jsonify({"msg": "BarterLearn API running"})
 
-    return send_from_directory(app.static_folder, "index.html")
-
-
-# -----------------------
-# HEALTH CHECK
-# -----------------------
-
-@app.route("/api/health")
-def health():
-    return jsonify({"status": "ok"})
-
-
-# -----------------------
-# REGISTER
-# -----------------------
+# -----------------------------
+# Register
+# -----------------------------
 
 @app.route("/api/register", methods=["POST"])
 def register():
-
     data = request.get_json()
 
     if not data:
-        return jsonify({"msg": "No data provided"}), 400
+        return jsonify({"msg": "Invalid data"}), 400
 
-    name = data.get("name")
     email = data.get("email")
     password = data.get("password")
+    name = data.get("name")
 
-    if not name or not email or not password:
+    if not email or not password or not name:
         return jsonify({"msg": "Missing fields"}), 400
 
-    if User.query.filter_by(email=email).first():
-        return jsonify({"msg": "Email already registered"}), 400
+    existing = User.query.filter_by(email=email).first()
+
+    if existing:
+        return jsonify({"msg": "User already exists"}), 400
 
     user = User(
         name=name,
-        email=email.lower(),
+        email=email,
         password=generate_password_hash(password)
     )
 
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"msg": "User created"}), 201
+    return jsonify({"msg": "User registered successfully"})
 
-
-# -----------------------
-# LOGIN
-# -----------------------
+# -----------------------------
+# Login
+# -----------------------------
 
 @app.route("/api/login", methods=["POST"])
 def login():
 
     data = request.get_json()
 
-    if not data:
-        return jsonify({"msg": "Invalid request"}), 400
+    email = data.get("email")
+    password = data.get("password")
 
-    user = User.query.filter_by(email=data.get("email")).first()
+    user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password, data.get("password")):
+    if not user or not check_password_hash(user.password, password):
         return jsonify({"msg": "Bad credentials"}), 401
 
-    access_token = create_access_token(identity=user.id)
+    # FIX: JWT subject must be string
+    access_token = create_access_token(identity=str(user.id))
 
-    return jsonify({"access_token": access_token})
+    return jsonify(access_token=access_token)
 
+# -----------------------------
+# Get Current User
+# -----------------------------
 
-# -----------------------
-# CURRENT USER
-# -----------------------
-
-@app.route("/api/me")
+@app.route("/api/me", methods=["GET"])
 @jwt_required()
 def get_me():
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     user = User.query.get_or_404(user_id)
 
     return jsonify(user.to_dict())
 
+# -----------------------------
+# Update Profile
+# -----------------------------
 
-# -----------------------
-# USERS
-# -----------------------
+@app.route("/api/me", methods=["PUT"])
+@jwt_required()
+def update_profile():
 
-@app.route("/api/users")
+    user_id = int(get_jwt_identity())
+
+    user = User.query.get_or_404(user_id)
+
+    data = request.get_json()
+
+    if not isinstance(data, dict):
+        return jsonify({"msg": "Invalid JSON"}), 400
+
+    user.name = data.get("name", user.name)
+    user.bio = data.get("bio", user.bio)
+    user.avatar = data.get("avatar", user.avatar)
+
+    user.skills_offered = data.get("skillsOffered", user.skills_offered)
+    user.skills_wanted = data.get("skillsWanted", user.skills_wanted)
+
+    db.session.commit()
+
+    return jsonify(user.to_dict())
+
+# -----------------------------
+# Get All Users
+# -----------------------------
+
+@app.route("/api/users", methods=["GET"])
 @jwt_required()
 def get_users():
 
@@ -165,8 +155,11 @@ def get_users():
 
     return jsonify([u.to_dict() for u in users])
 
+# -----------------------------
+# Get Single User
+# -----------------------------
 
-@app.route("/api/users/<int:user_id>")
+@app.route("/api/users/<int:user_id>", methods=["GET"])
 @jwt_required()
 def get_user(user_id):
 
@@ -174,123 +167,157 @@ def get_user(user_id):
 
     return jsonify(user.to_dict())
 
+# -----------------------------
+# Get Matches
+# -----------------------------
 
-# -----------------------
-# UPDATE USER
-# -----------------------
-
-@app.route("/api/users/<int:user_id>", methods=["PUT"])
+@app.route("/api/matches", methods=["GET"])
 @jwt_required()
-def update_user(user_id):
+def get_matches():
 
-    try:
+    current_user_id = int(get_jwt_identity())
 
-        current_user = int(get_jwt_identity())
+    current_user = User.query.get(current_user_id)
 
-        if current_user != user_id:
-            return jsonify({"msg": "Unauthorized"}), 403
+    users = User.query.filter(User.id != current_user_id).all()
 
-        data = request.get_json()
+    matches = []
 
-        if not isinstance(data, dict):
-            return jsonify({"msg": "Invalid data"}), 400
+    for u in users:
 
-        user = User.query.get_or_404(user_id)
+        common = list(
+            set(current_user.skills_wanted).intersection(
+                set(u.skills_offered)
+            )
+        )
 
-        user.name = data.get("name", user.name)
-        user.bio = data.get("bio", user.bio)
-        user.avatar = data.get("avatar", user.avatar)
+        if common:
+            matches.append({
+                "id": u.id,
+                "name": u.name,
+                "avatar": u.avatar,
+                "commonSkills": common,
+                "compatibilityScore": len(common) * 20
+            })
 
-        if "skillsOffered" in data:
-            user.skills_offered = data["skillsOffered"]
+    return jsonify(matches)
 
-        if "skillsWanted" in data:
-            user.skills_wanted = data["skillsWanted"]
+# -----------------------------
+# Exchanges
+# -----------------------------
 
-        db.session.commit()
-
-        return jsonify(user.to_dict())
-
-    except Exception as e:
-
-        logger.error(e)
-
-        return jsonify({"msg": "Server error updating profile"}), 500
-
-
-# -----------------------
-# MATCHES
-# -----------------------
-
-@app.route("/api/matches")
+@app.route("/api/exchanges", methods=["GET"])
 @jwt_required()
-def matches():
+def get_exchanges():
 
-    me = User.query.get(get_jwt_identity())
+    user_id = int(get_jwt_identity())
 
-    others = User.query.filter(User.id != me.id).all()
-
-    results = []
-
-    for u in others:
-
-        learn = list(set(me.skills_wanted) & set(u.skills_offered))
-        teach = list(set(me.skills_offered) & set(u.skills_wanted))
-
-        score = (len(learn) * 20) + (len(teach) * 10)
-
-        results.append({
-            **u.to_dict(),
-            "compatibilityScore": min(score, 100),
-            "mutualExchange": len(learn) > 0 and len(teach) > 0
-        })
-
-    results.sort(key=lambda x: x["compatibilityScore"], reverse=True)
-
-    return jsonify(results)
-
-
-# -----------------------
-# EXCHANGES
-# -----------------------
-
-@app.route("/api/exchanges")
-@jwt_required()
-def exchanges():
-
-    exchanges = Exchange.query.all()
+    exchanges = Exchange.query.filter(
+        (Exchange.user_id == user_id) |
+        (Exchange.partner_id == user_id)
+    ).all()
 
     return jsonify([e.to_dict() for e in exchanges])
 
 
-# -----------------------
-# NOTIFICATIONS
-# -----------------------
-
-@app.route("/api/notifications")
+@app.route("/api/exchanges", methods=["POST"])
 @jwt_required()
-def notifications():
+def create_exchange():
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
-    notes = Notification.query.filter_by(user_id=user_id).all()
+    data = request.get_json()
 
-    return jsonify([n.to_dict() for n in notes])
+    exchange = Exchange(
+        user_id=user_id,
+        partner_id=data.get("partner_id"),
+        skill=data.get("skill"),
+        partner_skill=data.get("partner_skill"),
+        total_sessions=10
+    )
+
+    db.session.add(exchange)
+    db.session.commit()
+
+    return jsonify(exchange.to_dict())
 
 
-# -----------------------
-# ERROR HANDLERS
-# -----------------------
+@app.route("/api/exchanges/<int:exchange_id>", methods=["PATCH"])
+@jwt_required()
+def update_exchange(exchange_id):
 
-@app.errorhandler(404)
-def not_found(e):
-    return jsonify({"msg": "Not found"}), 404
+    exchange = Exchange.query.get_or_404(exchange_id)
+
+    data = request.get_json()
+
+    exchange.sessions_completed = data.get(
+        "sessions_completed",
+        exchange.sessions_completed
+    )
+
+    exchange.status = data.get(
+        "status",
+        exchange.status
+    )
+
+    exchange.rating = data.get(
+        "rating",
+        exchange.rating
+    )
+
+    db.session.commit()
+
+    return jsonify(exchange.to_dict())
+
+# -----------------------------
+# Notifications
+# -----------------------------
+
+@app.route("/api/notifications", methods=["GET"])
+@jwt_required()
+def get_notifications():
+
+    user_id = int(get_jwt_identity())
+
+    notifications = Notification.query.filter_by(user_id=user_id).all()
+
+    return jsonify([n.to_dict() for n in notifications])
 
 
-@app.errorhandler(500)
-def server_error(e):
-    return jsonify({"msg": "Server error"}), 500
+@app.route("/api/notifications", methods=["POST"])
+@jwt_required()
+def create_notification():
 
+    data = request.get_json()
+
+    notification = Notification(
+        user_id=data.get("user_id"),
+        title=data.get("title"),
+        message=data.get("message"),
+        type=data.get("type", "info")
+    )
+
+    db.session.add(notification)
+    db.session.commit()
+
+    return jsonify(notification.to_dict())
+
+
+@app.route("/api/notifications/<int:id>/read", methods=["PATCH"])
+@jwt_required()
+def mark_notification_read(id):
+
+    notification = Notification.query.get_or_404(id)
+
+    notification.read = True
+
+    db.session.commit()
+
+    return jsonify(notification.to_dict())
+
+# -----------------------------
+# Run Server
+# -----------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)
