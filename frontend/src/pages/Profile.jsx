@@ -1,23 +1,24 @@
-import React, { useState } from 'react';
-import { Plus, X, Save, Award } from 'lucide-react';
-import { popularSkills } from '../data/staticData';
+import React, { useState } from "react";
+import { Plus, X, Save, Award } from "lucide-react";
+import { popularSkills } from "../data/staticData";
 
-const Profile = ({ currentUser, updateUser }) => {
+const Profile = ({ currentUser = {}, updateUser }) => {
   const [isEditing, setIsEditing] = useState(false);
+
   const [formData, setFormData] = useState({
-    bio: currentUser.bio || "",
-    skillsOffered: [...(currentUser.skillsOffered || [])],
-    skillsWanted: [...(currentUser.skillsWanted || [])]
+    bio: currentUser?.bio || "",
+    skillsOffered: [...(currentUser?.skillsOffered || [])],
+    skillsWanted: [...(currentUser?.skillsWanted || [])]
   });
 
-  const [newSkillOffered, setNewSkillOffered] = useState('');
-  const [newSkillWanted, setNewSkillWanted] = useState('');
+  const [newSkillOffered, setNewSkillOffered] = useState("");
+  const [newSkillWanted, setNewSkillWanted] = useState("");
 
-  // ✅ FIXED SAVE FUNCTION
   const handleSave = async () => {
     try {
-      await updateUser(currentUser.id, formData); // send only editable fields
+      await updateUser(formData);
       setIsEditing(false);
+      alert("Profile updated successfully");
     } catch (error) {
       console.error(error);
       alert("Failed to update profile");
@@ -30,7 +31,7 @@ const Profile = ({ currentUser, updateUser }) => {
         ...formData,
         skillsOffered: [...formData.skillsOffered, newSkillOffered]
       });
-      setNewSkillOffered('');
+      setNewSkillOffered("");
     }
   };
 
@@ -40,21 +41,21 @@ const Profile = ({ currentUser, updateUser }) => {
         ...formData,
         skillsWanted: [...formData.skillsWanted, newSkillWanted]
       });
-      setNewSkillWanted('');
+      setNewSkillWanted("");
     }
   };
 
   const removeSkillOffered = (skill) => {
     setFormData({
       ...formData,
-      skillsOffered: formData.skillsOffered.filter(s => s !== skill)
+      skillsOffered: formData.skillsOffered.filter((s) => s !== skill)
     });
   };
 
   const removeSkillWanted = (skill) => {
     setFormData({
       ...formData,
-      skillsWanted: formData.skillsWanted.filter(s => s !== skill)
+      skillsWanted: formData.skillsWanted.filter((s) => s !== skill)
     });
   };
 
@@ -69,7 +70,10 @@ const Profile = ({ currentUser, updateUser }) => {
           </button>
         ) : (
           <div style={styles.editActions}>
-            <button onClick={() => setIsEditing(false)} style={styles.cancelButton}>
+            <button
+              onClick={() => setIsEditing(false)}
+              style={styles.cancelButton}
+            >
               Cancel
             </button>
 
@@ -81,338 +85,310 @@ const Profile = ({ currentUser, updateUser }) => {
         )}
       </div>
 
-      <div style={styles.content}>
-        <div style={styles.profileCard}>
-          <div style={styles.profileHeader}>
-            <span style={styles.avatar}>{currentUser.avatar}</span>
+      <div style={styles.profileCard}>
+        <div style={styles.profileHeader}>
+          <span style={styles.avatar}>{currentUser?.avatar || "🙂"}</span>
 
-            <div>
-              <h2 style={styles.name}>{currentUser.name}</h2>
-              <p style={styles.email}>{currentUser.email}</p>
+          <div>
+            <h2 style={styles.name}>{currentUser?.name || "User"}</h2>
 
-              <div style={styles.stats}>
-                <span style={styles.statBadge}>
-                  <Award size={16} />
-                  {currentUser.rating} ⭐
-                </span>
+            <p style={styles.email}>{currentUser?.email}</p>
 
-                <span style={styles.statBadge}>
-                  {currentUser.completedExchanges} exchanges
-                </span>
-              </div>
+            <div style={styles.stats}>
+              <span style={styles.statBadge}>
+                <Award size={16} />
+                {currentUser?.rating || 0} ⭐
+              </span>
+
+              <span style={styles.statBadge}>
+                {currentUser?.completedExchanges || 0} exchanges
+              </span>
             </div>
-          </div>
-
-          <div style={styles.bioSection}>
-            <h3 style={styles.sectionTitle}>Bio</h3>
-
-            {isEditing ? (
-              <textarea
-                value={formData.bio}
-                onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
-                }
-                style={styles.textarea}
-                rows="3"
-              />
-            ) : (
-              <p style={styles.bio}>{currentUser.bio}</p>
-            )}
           </div>
         </div>
 
-        <div style={styles.skillsGrid}>
+        <div style={styles.bioSection}>
+          <h3 style={styles.sectionTitle}>Bio</h3>
 
-          {/* Skills Offered */}
-          <div style={styles.skillCard}>
-            <h3 style={styles.skillCardTitle}>Skills I Offer 🎓</h3>
+          {isEditing ? (
+            <textarea
+              value={formData.bio}
+              onChange={(e) =>
+                setFormData({ ...formData, bio: e.target.value })
+              }
+              style={styles.textarea}
+            />
+          ) : (
+            <p style={styles.bio}>{currentUser?.bio || "No bio added yet."}</p>
+          )}
+        </div>
+      </div>
 
-            <div style={styles.skillList}>
-              {(isEditing ? formData.skillsOffered : currentUser.skillsOffered).map((skill, index) => (
-                <span key={index} style={styles.skillTag}>
-                  {skill}
+      <div style={styles.skillsGrid}>
+        {/* Skills Offered */}
+        <div style={styles.skillCard}>
+          <h3 style={styles.skillCardTitle}>Skills I Offer 🎓</h3>
 
-                  {isEditing && (
-                    <button
-                      onClick={() => removeSkillOffered(skill)}
-                      style={styles.removeButton}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
+          <div style={styles.skillList}>
+            {(isEditing
+              ? formData.skillsOffered
+              : currentUser?.skillsOffered || []
+            ).map((skill, index) => (
+              <span key={index} style={styles.skillTag}>
+                {skill}
 
-            {isEditing && (
-              <div style={styles.addSkillSection}>
-                <select
-                  value={newSkillOffered}
-                  onChange={(e) => setNewSkillOffered(e.target.value)}
-                  style={styles.select}
-                >
-                  <option value="">Select a skill...</option>
-
-                  {popularSkills
-                    .filter(s => !formData.skillsOffered.includes(s))
-                    .map((skill, index) => (
-                      <option key={index} value={skill}>
-                        {skill}
-                      </option>
-                    ))}
-                </select>
-
-                <button onClick={addSkillOffered} style={styles.addButton}>
-                  <Plus size={18} />
-                  Add
-                </button>
-              </div>
-            )}
+                {isEditing && (
+                  <button
+                    onClick={() => removeSkillOffered(skill)}
+                    style={styles.removeButton}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </span>
+            ))}
           </div>
 
-          {/* Skills Wanted */}
-          <div style={styles.skillCard}>
-            <h3 style={styles.skillCardTitle}>Skills I Want to Learn 📚</h3>
+          {isEditing && (
+            <div style={styles.addSkillSection}>
+              <select
+                value={newSkillOffered}
+                onChange={(e) => setNewSkillOffered(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">Select skill</option>
 
-            <div style={styles.skillList}>
-              {(isEditing ? formData.skillsWanted : currentUser.skillsWanted).map((skill, index) => (
-                <span
-                  key={index}
-                  style={{ ...styles.skillTag, ...styles.skillTagWanted }}
-                >
-                  {skill}
+                {popularSkills
+                  .filter((s) => !formData.skillsOffered.includes(s))
+                  .map((skill, index) => (
+                    <option key={index} value={skill}>
+                      {skill}
+                    </option>
+                  ))}
+              </select>
 
-                  {isEditing && (
-                    <button
-                      onClick={() => removeSkillWanted(skill)}
-                      style={styles.removeButton}
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </span>
-              ))}
+              <button onClick={addSkillOffered} style={styles.addButton}>
+                <Plus size={18} />
+              </button>
             </div>
+          )}
+        </div>
 
-            {isEditing && (
-              <div style={styles.addSkillSection}>
-                <select
-                  value={newSkillWanted}
-                  onChange={(e) => setNewSkillWanted(e.target.value)}
-                  style={styles.select}
-                >
-                  <option value="">Select a skill...</option>
+        {/* Skills Wanted */}
+        <div style={styles.skillCard}>
+          <h3 style={styles.skillCardTitle}>Skills I Want 📚</h3>
 
-                  {popularSkills
-                    .filter(s => !formData.skillsWanted.includes(s))
-                    .map((skill, index) => (
-                      <option key={index} value={skill}>
-                        {skill}
-                      </option>
-                    ))}
-                </select>
+          <div style={styles.skillList}>
+            {(isEditing
+              ? formData.skillsWanted
+              : currentUser?.skillsWanted || []
+            ).map((skill, index) => (
+              <span
+                key={index}
+                style={{ ...styles.skillTag, ...styles.skillTagWanted }}
+              >
+                {skill}
 
-                <button onClick={addSkillWanted} style={styles.addButton}>
-                  <Plus size={18} />
-                  Add
-                </button>
-              </div>
-            )}
+                {isEditing && (
+                  <button
+                    onClick={() => removeSkillWanted(skill)}
+                    style={styles.removeButton}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </span>
+            ))}
           </div>
 
+          {isEditing && (
+            <div style={styles.addSkillSection}>
+              <select
+                value={newSkillWanted}
+                onChange={(e) => setNewSkillWanted(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">Select skill</option>
+
+                {popularSkills
+                  .filter((s) => !formData.skillsWanted.includes(s))
+                  .map((skill, index) => (
+                    <option key={index} value={skill}>
+                      {skill}
+                    </option>
+                  ))}
+              </select>
+
+              <button onClick={addSkillWanted} style={styles.addButton}>
+                <Plus size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-/* ---------- STYLES ---------- */
-
 const styles = {
   container: {
-    maxWidth: '1000px',
-    margin: '0 auto',
-    padding: '40px 20px',
-    flex: 1
+    maxWidth: "1000px",
+    margin: "0 auto",
+    padding: "40px 20px"
   },
 
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '32px'
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "30px"
   },
 
   title: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: 'var(--text-dark)'
+    fontSize: "32px",
+    fontWeight: "700"
   },
 
   editButton: {
-    padding: '10px 20px',
-    backgroundColor: 'var(--primary-color)',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600'
+    padding: "10px 20px",
+    background: "#6366f1",
+    color: "white",
+    borderRadius: "8px",
+    cursor: "pointer"
   },
 
   editActions: {
-    display: 'flex',
-    gap: '12px'
+    display: "flex",
+    gap: "10px"
   },
 
   cancelButton: {
-    padding: '10px 20px',
-    backgroundColor: 'var(--bg-gray)',
-    color: 'var(--text-dark)',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600'
+    padding: "10px 20px",
+    borderRadius: "8px"
   },
 
   saveButton: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '10px 20px',
-    backgroundColor: 'var(--secondary-color)',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600'
-  },
-
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px'
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "10px 20px",
+    background: "#10b981",
+    color: "white",
+    borderRadius: "8px"
   },
 
   profileCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '32px',
-    boxShadow: 'var(--shadow)'
+    background: "white",
+    borderRadius: "12px",
+    padding: "30px",
+    marginBottom: "20px"
   },
 
   profileHeader: {
-    display: 'flex',
-    gap: '24px',
-    marginBottom: '32px'
+    display: "flex",
+    gap: "20px"
   },
 
   avatar: {
-    fontSize: '80px'
+    fontSize: "70px"
   },
 
   name: {
-    fontSize: '28px',
-    fontWeight: 'bold',
-    color: 'var(--text-dark)'
+    fontSize: "26px",
+    fontWeight: "700"
   },
 
   email: {
-    fontSize: '14px',
-    color: 'var(--text-medium)',
-    marginBottom: '12px'
+    fontSize: "14px",
+    opacity: 0.7
   },
 
   stats: {
-    display: 'flex',
-    gap: '12px'
+    display: "flex",
+    gap: "10px",
+    marginTop: "10px"
   },
 
   statBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '4px',
-    padding: '6px 12px',
-    backgroundColor: 'var(--bg-gray)',
-    borderRadius: '20px',
-    fontSize: '13px'
+    display: "flex",
+    gap: "4px",
+    background: "#f3f4f6",
+    padding: "4px 10px",
+    borderRadius: "10px",
+    fontSize: "12px"
   },
 
   bioSection: {
-    paddingTop: '24px',
-    borderTop: '1px solid var(--border-color)'
+    marginTop: "20px"
   },
 
   sectionTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    marginBottom: '12px'
+    fontWeight: "600",
+    marginBottom: "8px"
   },
 
   bio: {
-    fontSize: '14px',
-    lineHeight: '1.6'
+    fontSize: "14px"
   },
 
   textarea: {
-    width: '100%',
-    padding: '12px',
-    borderRadius: '8px',
-    border: '1px solid var(--border-color)'
+    width: "100%",
+    padding: "10px",
+    borderRadius: "8px"
   },
 
   skillsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-    gap: '24px'
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "20px"
   },
 
   skillCard: {
-    backgroundColor: 'white',
-    borderRadius: '12px',
-    padding: '24px'
+    background: "white",
+    padding: "20px",
+    borderRadius: "12px"
   },
 
   skillCardTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    marginBottom: '16px'
+    marginBottom: "12px"
   },
 
   skillList: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px'
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px"
   },
 
   skillTag: {
-    padding: '8px 14px',
-    backgroundColor: '#e0e7ff',
-    borderRadius: '20px',
-    fontSize: '13px'
+    padding: "6px 12px",
+    background: "#e0e7ff",
+    borderRadius: "20px",
+    fontSize: "12px"
   },
 
   skillTagWanted: {
-    backgroundColor: '#d1fae5'
+    background: "#d1fae5"
   },
 
   removeButton: {
-    marginLeft: '6px'
+    marginLeft: "6px"
   },
 
   addSkillSection: {
-    display: 'flex',
-    gap: '8px',
-    marginTop: '16px'
+    display: "flex",
+    gap: "8px",
+    marginTop: "10px"
   },
 
   select: {
     flex: 1,
-    padding: '10px',
-    borderRadius: '8px'
+    padding: "8px"
   },
 
   addButton: {
-    padding: '10px 16px',
-    backgroundColor: 'var(--primary-color)',
-    color: 'white',
-    borderRadius: '8px'
+    padding: "8px 12px",
+    background: "#6366f1",
+    color: "white",
+    borderRadius: "6px"
   }
 };
 

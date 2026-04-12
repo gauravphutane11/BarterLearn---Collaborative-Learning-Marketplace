@@ -1,0 +1,120 @@
+/* GLOBAL RESET */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", "Segoe UI", sans-serif;
+
+    /* Beautiful gradient background */
+
+    background: linear-gradient(135deg,
+            #4f46e5,
+            #6366f1,
+            #8b5cf6);
+
+    min-height: 100vh;
+    color: #1f2937;
+}
+
+/* LOGIN CARD */
+
+.glass-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.15);
+
+    backdrop-filter: blur(10px);
+}
+
+/* HEADINGS */
+
+h1,
+h2,
+h3 {
+    color: #111827;
+}
+
+/* INPUTS */
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+
+    font-size: 14px;
+    outline: none;
+
+    transition: all 0.2s ease;
+}
+
+input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+/* BUTTON */
+
+.btn-primary {
+
+    width: 100%;
+    padding: 14px;
+
+    border-radius: 12px;
+
+    background: linear-gradient(135deg,
+            #6366f1,
+            #8b5cf6);
+
+    color: white;
+    font-weight: 600;
+
+    border: none;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 25px rgba(99, 102, 241, 0.35);
+}
+
+/* LINKS */
+
+a {
+    color: #6366f1;
+    font-weight: 500;
+}
+
+/* INFO BOX */
+
+.info-box {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 10px;
+
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 10px;
+}

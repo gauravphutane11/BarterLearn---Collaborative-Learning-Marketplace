@@ -1,26 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Video, VideoOff, Mic, MicOff, PhoneOff, MessageSquare, 
-  Users, Clock, MonitorUp, Settings 
-} from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  PhoneOff,
+  MessageSquare,
+  Users,
+  Clock,
+  MonitorUp,
+  Settings
+} from "lucide-react";
 
-const VideoChat = ({ currentUser, users }) => {
+const VideoChat = ({ currentUser = {}, users = [] }) => {
   const { matchId } = useParams();
   const navigate = useNavigate();
+
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
 
-  const partner = users.find(u => u.id.toString() === matchId) || users[1];
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+
+  const partner =
+    users.find((u) => u?.id?.toString() === matchId) || {
+      name: "Learning Partner",
+      avatar: "🙂"
+    };
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setSessionTime(prev => prev + 1);
+      setSessionTime((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(timer);
@@ -29,134 +43,139 @@ const VideoChat = ({ currentUser, users }) => {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const handleEndCall = () => {
-    if (window.confirm('Are you sure you want to end this session?')) {
-      navigate('/progress');
+    if (window.confirm("End this learning session?")) {
+      navigate("/progress");
     }
   };
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      setChatMessages([...chatMessages, {
-        sender: currentUser.name,
-        message: newMessage,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }]);
-      setNewMessage('');
-    }
+    if (!newMessage.trim()) return;
+
+    const msg = {
+      sender: currentUser?.name || "You",
+      message: newMessage,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    };
+
+    setChatMessages((prev) => [...prev, msg]);
+    setNewMessage("");
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.videoArea}>
+        {/* Partner Video */}
         <div style={styles.partnerVideo}>
           <div style={styles.videoPlaceholder}>
-            <span style={styles.partnerAvatar}>{partner.avatar}</span>
-            <p style={styles.partnerName}>{partner.name}</p>
+            <span style={styles.partnerAvatar}>
+              {partner?.avatar || "🙂"}
+            </span>
+
+            <p style={styles.partnerName}>
+              {partner?.name || "Partner"}
+            </p>
+
             {!isVideoOn && <p style={styles.videoStatus}>Video Off</p>}
           </div>
+
           <div style={styles.sessionInfo}>
             <div style={styles.sessionBadge}>
               <Clock size={16} />
               {formatTime(sessionTime)}
             </div>
+
             <div style={styles.sessionBadge}>
               <Users size={16} />
-              Learning: React from {partner.name}
+              Learning Session
             </div>
           </div>
         </div>
 
+        {/* User Video */}
         <div style={styles.userVideo}>
           <div style={styles.userVideoPlaceholder}>
-            <span style={styles.userAvatar}>{currentUser.avatar}</span>
+            <span style={styles.userAvatar}>
+              {currentUser?.avatar || "🙂"}
+            </span>
+
             {!isVideoOn && <VideoOff size={20} color="white" />}
           </div>
         </div>
 
+        {/* Controls */}
         <div style={styles.controls}>
-          <button 
+          <button
             onClick={() => setIsVideoOn(!isVideoOn)}
-            style={{
-              ...styles.controlButton,
-              ...(isVideoOn ? styles.controlButtonActive : styles.controlButtonInactive)
-            }}
-            title={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
+            style={styles.controlButton}
           >
             {isVideoOn ? <Video size={20} /> : <VideoOff size={20} />}
           </button>
 
-          <button 
+          <button
             onClick={() => setIsAudioOn(!isAudioOn)}
-            style={{
-              ...styles.controlButton,
-              ...(isAudioOn ? styles.controlButtonActive : styles.controlButtonInactive)
-            }}
-            title={isAudioOn ? 'Mute' : 'Unmute'}
+            style={styles.controlButton}
           >
             {isAudioOn ? <Mic size={20} /> : <MicOff size={20} />}
           </button>
 
-          <button 
+          <button
             onClick={() => setIsScreenSharing(!isScreenSharing)}
-            style={{
-              ...styles.controlButton,
-              ...(isScreenSharing ? styles.controlButtonInactive : styles.controlButtonActive)
-            }}
-            title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
+            style={styles.controlButton}
           >
             <MonitorUp size={20} />
           </button>
 
-          <button 
+          <button
             onClick={() => setShowChat(!showChat)}
-            style={{
-              ...styles.controlButton,
-              ...(showChat ? styles.controlButtonInactive : styles.controlButtonActive)
-            }}
-            title="Toggle chat"
+            style={styles.controlButton}
           >
             <MessageSquare size={20} />
           </button>
 
-          <button 
-            onClick={handleEndCall}
-            style={styles.endCallButton}
-            title="End call"
-          >
+          <button onClick={handleEndCall} style={styles.endCallButton}>
             <PhoneOff size={20} />
           </button>
 
-          <button 
-            style={styles.controlButton}
-            title="Settings"
-          >
+          <button style={styles.controlButton}>
             <Settings size={20} />
           </button>
         </div>
       </div>
 
+      {/* Chat */}
       {showChat && (
         <div style={styles.chatPanel}>
           <div style={styles.chatHeader}>
-            <h3 style={styles.chatTitle}>Chat</h3>
-            <button onClick={() => setShowChat(false)} style={styles.chatClose}>×</button>
+            <h3>Chat</h3>
+
+            <button onClick={() => setShowChat(false)}>×</button>
           </div>
 
           <div style={styles.chatMessages}>
             {chatMessages.length === 0 ? (
-              <p style={styles.noChatMessages}>No messages yet. Start the conversation!</p>
+              <p style={styles.noMessages}>
+                No messages yet
+              </p>
             ) : (
-              chatMessages.map((msg, index) => (
-                <div key={index} style={styles.chatMessage}>
-                  <div style={styles.chatMessageHeader}>
-                    <strong>{msg.sender}</strong>
-                    <span style={styles.chatMessageTime}>{msg.time}</span>
-                  </div>
-                  <p style={styles.chatMessageText}>{msg.message}</p>
+              chatMessages.map((msg, i) => (
+                <div key={i} style={styles.chatMessage}>
+                  <strong>{msg.sender}</strong>
+
+                  <p>{msg.message}</p>
+
+                  <span style={styles.chatTime}>
+                    {msg.time}
+                  </span>
                 </div>
               ))
             )}
@@ -164,42 +183,40 @@ const VideoChat = ({ currentUser, users }) => {
 
           <div style={styles.chatInput}>
             <input
-              type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type a message..."
-              style={styles.chatInputField}
+              placeholder="Type message..."
+              onKeyDown={(e) =>
+                e.key === "Enter" && handleSendMessage()
+              }
             />
-            <button onClick={handleSendMessage} style={styles.chatSendButton}>
+
+            <button onClick={handleSendMessage}>
               Send
             </button>
           </div>
         </div>
       )}
 
+      {/* Info Panel */}
       <div style={styles.infoPanel}>
-        <h3 style={styles.infoPanelTitle}>Session Info</h3>
-        <div style={styles.infoPanelContent}>
-          <div style={styles.infoItem}>
-            <p style={styles.infoLabel}>Learning Partner:</p>
-            <p style={styles.infoValue}>{partner.name}</p>
-          </div>
-          <div style={styles.infoItem}>
-            <p style={styles.infoLabel}>Topic:</p>
-            <p style={styles.infoValue}>React Fundamentals</p>
-          </div>
-          <div style={styles.infoItem}>
-            <p style={styles.infoLabel}>Session Duration:</p>
-            <p style={styles.infoValue}>{formatTime(sessionTime)}</p>
-          </div>
-          <div style={styles.infoItem}>
-            <p style={styles.infoLabel}>Status:</p>
-            <p style={{...styles.infoValue, color: 'var(--secondary-color)'}}>● Active</p>
-          </div>
-        </div>
-        <p style={styles.prototypNote}>
-          📝 This is a prototype UI. In a real implementation, this would integrate with WebRTC or services like Agora/Twilio for actual video/audio streaming.
+        <h3>Session Info</h3>
+
+        <p>
+          <b>Partner:</b> {partner?.name}
+        </p>
+
+        <p>
+          <b>Duration:</b> {formatTime(sessionTime)}
+        </p>
+
+        <p style={{ color: "green" }}>
+          ● Active Session
+        </p>
+
+        <p style={styles.note}>
+          Prototype UI — real video would use WebRTC /
+          Agora / Twilio.
         </p>
       </div>
     </div>
@@ -208,245 +225,166 @@ const VideoChat = ({ currentUser, users }) => {
 
 const styles = {
   container: {
-    display: 'flex',
-    height: 'calc(100vh - 64px)',
-    backgroundColor: '#1a1a1a',
-    position: 'relative'
+    display: "flex",
+    height: "100vh",
+    background: "#1a1a1a"
   },
+
   videoArea: {
     flex: 1,
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column'
+    position: "relative"
   },
+
   partnerVideo: {
-    flex: 1,
-    backgroundColor: '#2d2d2d',
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "white"
   },
+
   videoPlaceholder: {
-    textAlign: 'center',
-    color: 'white'
+    textAlign: "center"
   },
+
   partnerAvatar: {
-    fontSize: '120px',
-    display: 'block',
-    marginBottom: '20px'
+    fontSize: "120px"
   },
+
   partnerName: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    marginBottom: '8px'
+    fontSize: "24px"
   },
+
   videoStatus: {
-    fontSize: '14px',
-    opacity: 0.7
+    opacity: 0.6
   },
-  sessionInfo: {
-    position: 'absolute',
-    top: '20px',
-    left: '20px',
-    display: 'flex',
-    gap: '12px',
-    flexWrap: 'wrap'
-  },
-  sessionBadge: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    padding: '8px 16px',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    color: 'white',
-    borderRadius: '20px',
-    fontSize: '13px',
-    fontWeight: '500',
-    backdropFilter: 'blur(10px)'
-  },
+
   userVideo: {
-    position: 'absolute',
-    bottom: '100px',
-    right: '20px',
-    width: '240px',
-    height: '180px',
-    backgroundColor: '#3d3d3d',
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+    position: "absolute",
+    bottom: "100px",
+    right: "20px",
+    width: "200px",
+    height: "150px",
+    background: "#333",
+    borderRadius: "10px"
   },
+
   userVideoPlaceholder: {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white'
+    height: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "white"
   },
+
   userAvatar: {
-    fontSize: '64px'
+    fontSize: "50px"
   },
+
   controls: {
-    position: 'absolute',
-    bottom: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: '12px',
-    padding: '12px',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: '50px',
-    backdropFilter: 'blur(10px)'
+    position: "absolute",
+    bottom: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    display: "flex",
+    gap: "10px"
   },
+
   controlButton: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s'
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    background: "#333",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   },
-  controlButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    color: 'white'
-  },
-  controlButtonInactive: {
-    backgroundColor: '#ef4444',
-    color: 'white'
-  },
+
   endCallButton: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '50%',
-    backgroundColor: '#ef4444',
-    color: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    background: "#ef4444",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center"
   },
+
+  sessionInfo: {
+    position: "absolute",
+    top: "20px",
+    left: "20px",
+    display: "flex",
+    gap: "10px"
+  },
+
+  sessionBadge: {
+    background: "rgba(0,0,0,0.6)",
+    padding: "6px 12px",
+    borderRadius: "20px",
+    color: "white",
+    display: "flex",
+    gap: "6px",
+    alignItems: "center"
+  },
+
   chatPanel: {
-    width: '320px',
-    backgroundColor: 'white',
-    display: 'flex',
-    flexDirection: 'column',
-    borderLeft: '1px solid var(--border-color)'
+    width: "320px",
+    background: "white",
+    display: "flex",
+    flexDirection: "column"
   },
+
   chatHeader: {
-    padding: '16px',
-    borderBottom: '1px solid var(--border-color)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    padding: "10px",
+    borderBottom: "1px solid #ddd",
+    display: "flex",
+    justifyContent: "space-between"
   },
-  chatTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: 'var(--text-dark)'
-  },
-  chatClose: {
-    fontSize: '24px',
-    backgroundColor: 'transparent',
-    color: 'var(--text-medium)',
-    padding: '4px 8px'
-  },
+
   chatMessages: {
     flex: 1,
-    padding: '16px',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
+    padding: "10px",
+    overflowY: "auto"
   },
-  noChatMessages: {
-    textAlign: 'center',
-    color: 'var(--text-light)',
-    fontSize: '13px',
-    padding: '40px 20px'
+
+  noMessages: {
+    textAlign: "center",
+    opacity: 0.6
   },
+
   chatMessage: {
-    padding: '12px',
-    backgroundColor: 'var(--bg-gray)',
-    borderRadius: '8px'
+    padding: "10px",
+    background: "#f4f4f4",
+    borderRadius: "8px",
+    marginBottom: "10px"
   },
-  chatMessageHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '6px',
-    fontSize: '12px'
+
+  chatTime: {
+    fontSize: "12px",
+    opacity: 0.6
   },
-  chatMessageTime: {
-    color: 'var(--text-light)'
-  },
-  chatMessageText: {
-    fontSize: '14px',
-    color: 'var(--text-dark)',
-    lineHeight: '1.4'
-  },
+
   chatInput: {
-    padding: '16px',
-    borderTop: '1px solid var(--border-color)',
-    display: 'flex',
-    gap: '8px'
+    padding: "10px",
+    display: "flex",
+    gap: "8px"
   },
-  chatInputField: {
-    flex: 1,
-    padding: '10px',
-    border: '1px solid var(--border-color)',
-    borderRadius: '8px',
-    fontSize: '14px'
-  },
-  chatSendButton: {
-    padding: '10px 20px',
-    backgroundColor: 'var(--primary-color)',
-    color: 'white',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600'
-  },
+
   infoPanel: {
-    width: '280px',
-    backgroundColor: 'white',
-    padding: '20px',
-    borderLeft: '1px solid var(--border-color)',
-    overflowY: 'auto'
+    width: "260px",
+    background: "white",
+    padding: "20px"
   },
-  infoPanelTitle: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: 'var(--text-dark)',
-    marginBottom: '16px'
-  },
-  infoPanelContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '24px'
-  },
-  infoItem: {
-    paddingBottom: '12px',
-    borderBottom: '1px solid var(--border-color)'
-  },
-  infoLabel: {
-    fontSize: '12px',
-    color: 'var(--text-medium)',
-    marginBottom: '4px',
-    fontWeight: '500'
-  },
-  infoValue: {
-    fontSize: '14px',
-    color: 'var(--text-dark)',
-    fontWeight: '600'
-  },
-  prototypNote: {
-    padding: '12px',
-    backgroundColor: '#fef3c7',
-    borderRadius: '8px',
-    fontSize: '12px',
-    color: '#92400e',
-    lineHeight: '1.5'
+
+  note: {
+    marginTop: "20px",
+    fontSize: "12px",
+    background: "#fef3c7",
+    padding: "10px",
+    borderRadius: "8px"
   }
 };
 
