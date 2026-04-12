@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const API_BASE = "https://barterlearn-collaborative-learning-45hs.onrender.com";
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("access_token");
