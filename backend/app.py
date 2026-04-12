@@ -118,10 +118,8 @@ def get_user(user_id):
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
-    current_user_id = int(get_jwt_identity())
 
-    # Allow only the logged-in user to update their profile
-    if current_user_id != user_id:
+    if int(get_jwt_identity()) != user_id:
         return jsonify({'msg': 'Unauthorized'}), 403
 
     data = request.get_json()
