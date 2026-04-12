@@ -11,11 +11,11 @@ from extensions import db
 from models import User, Exchange, Notification
 import os
 
-app = Flask(__name__)
+# -----------------------------
+# App Setup
+# -----------------------------
 
-# -----------------------------
-# Configuration
-# -----------------------------
+app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URL",
@@ -23,7 +23,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
 )
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-key")
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "barterlearn-secret")
 
 db.init_app(app)
 jwt = JWTManager(app)
@@ -31,18 +31,18 @@ jwt = JWTManager(app)
 CORS(app, origins="*")
 
 # -----------------------------
-# Create tables
+# Create tables automatically
 # -----------------------------
 
 with app.app_context():
     db.create_all()
 
 # -----------------------------
-# Root Route
+# Root
 # -----------------------------
 
 @app.route("/")
-def home():
+def root():
     return jsonify({"msg": "BarterLearn API running"})
 
 # -----------------------------
@@ -51,6 +51,7 @@ def home():
 
 @app.route("/api/register", methods=["POST"])
 def register():
+
     data = request.get_json()
 
     if not data:
@@ -61,7 +62,7 @@ def register():
     name = data.get("name")
 
     if not email or not password or not name:
-        return jsonify({"msg": "Missing fields"}), 400
+        return jsonify({"msg": "Missing required fields"}), 400
 
     existing = User.query.filter_by(email=email).first()
 
@@ -88,21 +89,27 @@ def login():
 
     data = request.get_json()
 
+    if not data:
+        return jsonify({"msg": "Invalid data"}), 400
+
     email = data.get("email")
     password = data.get("password")
 
     user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password, password):
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    if not check_password_hash(user.password, password):
         return jsonify({"msg": "Bad credentials"}), 401
 
-    # FIX: JWT subject must be string
-    access_token = create_access_token(identity=str(user.id))
+    # JWT subject must be string
+    token = create_access_token(identity=str(user.id))
 
-    return jsonify(access_token=access_token)
+    return jsonify(access_token=token)
 
 # -----------------------------
-# Get Current User
+# Current User
 # -----------------------------
 
 @app.route("/api/me", methods=["GET"])
@@ -132,19 +139,27 @@ def update_profile():
     if not isinstance(data, dict):
         return jsonify({"msg": "Invalid JSON"}), 400
 
-    user.name = data.get("name", user.name)
-    user.bio = data.get("bio", user.bio)
-    user.avatar = data.get("avatar", user.avatar)
+    if "name" in data:
+        user.name = data["name"]
 
-    user.skills_offered = data.get("skillsOffered", user.skills_offered)
-    user.skills_wanted = data.get("skillsWanted", user.skills_wanted)
+    if "bio" in data:
+        user.bio = data["bio"]
+
+    if "avatar" in data:
+        user.avatar = data["avatar"]
+
+    if "skillsOffered" in data:
+        user.skills_offered = data["skillsOffered"]
+
+    if "skillsWanted" in data:
+        user.skills_wanted = data["skillsWanted"]
 
     db.session.commit()
 
     return jsonify(user.to_dict())
 
 # -----------------------------
-# Get All Users
+# Users
 # -----------------------------
 
 @app.route("/api/users", methods=["GET"])
@@ -155,9 +170,6 @@ def get_users():
 
     return jsonify([u.to_dict() for u in users])
 
-# -----------------------------
-# Get Single User
-# -----------------------------
 
 @app.route("/api/users/<int:user_id>", methods=["GET"])
 @jwt_required()
@@ -168,12 +180,12 @@ def get_user(user_id):
     return jsonify(user.to_dict())
 
 # -----------------------------
-# Get Matches
+# Matching Algorithm
 # -----------------------------
 
 @app.route("/api/matches", methods=["GET"])
 @jwt_required()
-def get_matches():
+def matches():
 
     current_user_id = int(get_jwt_identity())
 
@@ -181,7 +193,7 @@ def get_matches():
 
     users = User.query.filter(User.id != current_user_id).all()
 
-    matches = []
+    results = []
 
     for u in users:
 
@@ -191,8 +203,9 @@ def get_matches():
             )
         )
 
-        if common:
-            matches.append({
+        if len(common) > 0:
+
+            results.append({
                 "id": u.id,
                 "name": u.name,
                 "avatar": u.avatar,
@@ -200,7 +213,7 @@ def get_matches():
                 "compatibilityScore": len(common) * 20
             })
 
-    return jsonify(matches)
+    return jsonify(results)
 
 # -----------------------------
 # Exchanges
@@ -242,28 +255,22 @@ def create_exchange():
     return jsonify(exchange.to_dict())
 
 
-@app.route("/api/exchanges/<int:exchange_id>", methods=["PATCH"])
+@app.route("/api/exchanges/<int:id>", methods=["PATCH"])
 @jwt_required()
-def update_exchange(exchange_id):
+def update_exchange(id):
 
-    exchange = Exchange.query.get_or_404(exchange_id)
+    exchange = Exchange.query.get_or_404(id)
 
     data = request.get_json()
 
-    exchange.sessions_completed = data.get(
-        "sessions_completed",
-        exchange.sessions_completed
-    )
+    if "sessions_completed" in data:
+        exchange.sessions_completed = data["sessions_completed"]
 
-    exchange.status = data.get(
-        "status",
-        exchange.status
-    )
+    if "status" in data:
+        exchange.status = data["status"]
 
-    exchange.rating = data.get(
-        "rating",
-        exchange.rating
-    )
+    if "rating" in data:
+        exchange.rating = data["rating"]
 
     db.session.commit()
 
@@ -305,7 +312,7 @@ def create_notification():
 
 @app.route("/api/notifications/<int:id>/read", methods=["PATCH"])
 @jwt_required()
-def mark_notification_read(id):
+def read_notification(id):
 
     notification = Notification.query.get_or_404(id)
 
@@ -316,7 +323,7 @@ def mark_notification_read(id):
     return jsonify(notification.to_dict())
 
 # -----------------------------
-# Run Server
+# Run local server
 # -----------------------------
 
 if __name__ == "__main__":
