@@ -118,26 +118,38 @@ def get_user(user_id):
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
+    try:
+        current_user_id = int(get_jwt_identity())
 
-    if int(get_jwt_identity()) != user_id:
-        return jsonify({'msg': 'Unauthorized'}), 403
+        if current_user_id != user_id:
+            return jsonify({'msg': 'Unauthorized'}), 403
 
-    data = request.get_json()
-    user = User.query.get_or_404(user_id)
+        data = request.get_json()
+        user = User.query.get_or_404(user_id)
 
-    user.name = data.get('name', user.name)
-    user.bio = data.get('bio', user.bio)
-    user.avatar = data.get('avatar', user.avatar)
+        # Update allowed fields
+        if 'name' in data:
+            user.name = data['name']
 
-    if data.get('skillsOffered'):
-        user.skills_offered = data.get('skillsOffered')
+        if 'bio' in data:
+            user.bio = data['bio']
 
-    if data.get('skillsWanted'):
-        user.skills_wanted = data.get('skillsWanted')
+        if 'avatar' in data:
+            user.avatar = data['avatar']
 
-    db.session.commit()
+        if 'skillsOffered' in data:
+            user.skills_offered = data['skillsOffered']
 
-    return jsonify(user.to_dict())
+        if 'skillsWanted' in data:
+            user.skills_wanted = data['skillsWanted']
+
+        db.session.commit()
+
+        return jsonify(user.to_dict()), 200
+
+    except Exception as e:
+        print("UPDATE PROFILE ERROR:", e)
+        return jsonify({'msg': 'Server error updating profile'}), 500
 
 @app.route('/api/exchanges', methods=['GET'])
 @jwt_required()
