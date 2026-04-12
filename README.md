@@ -1,128 +1,124 @@
 # BarterLearn
 
-BarterLearn is a simplified collaborative learning marketplace built with a React frontend and Flask backend.
+BarterLearn is a collaborative learning marketplace — exchange skills and knowledge with peers.
 
-## What this project contains
+## Project Structure
 
-- `backend/` — Flask API server, database models, seed data, and production entrypoint.
-- `src/` — React frontend UI, page routes, and API client.
-- `package.json` — frontend dependencies and useful scripts.
-- `vite.config.js` — local dev server config with API proxy to Flask.
-- `backend/.env.example` — sample backend environment variables.
+```
+barterlearn/
+├── backend/              ← Flask API (Python)
+│   ├── app.py            ← Main Flask app, all API routes
+│   ├── models.py         ← SQLAlchemy models (User, Exchange, Notification)
+│   ├── extensions.py     ← Shared db instance
+│   ├── seed.py           ← Demo data seeder
+│   ├── wsgi.py           ← Production WSGI entry (Gunicorn / Waitress)
+│   ├── requirements.txt  ← Python dependencies
+│   ├── .env              ← Backend env vars (never commit)
+│   └── .env.example      ← Template for backend env vars
+│
+├── frontend/             ← React + Vite (JavaScript)
+│   ├── src/              ← All React components, pages, API client
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   ├── components/
+│   │   └── pages/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── package.json
+│   ├── vercel.json       ← Vercel SPA routing config
+│   ├── .env              ← Local dev env (VITE_API_BASE=)
+│   └── .env.production   ← Production env (VITE_API_BASE=<render-url>)
+│
+├── render.yaml           ← Render IaC (backend + PostgreSQL)
+├── .gitignore
+└── README.md
+```
 
 ## Tech stack
 
-- Frontend: React 18, Vite, React Router, Lucide icons
-- Backend: Python 3, Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Migrate
-- Database: SQLite (local file `backend/barterlearn.db`)
-- Production server: Waitress via `backend/wsgi.py`
+- **Frontend**: React 18, Vite, React Router, Lucide icons → deployed on **Vercel**
+- **Backend**: Python 3, Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Migrate → deployed on **Render**
+- **Database**: SQLite (local) / PostgreSQL (production via Render)
 
-## Project responsibilities
+---
 
-- `src/App.jsx` — global app state, authentication, route protection, and current user loading.
-- `src/api.js` — centralized API service for communicating with the Flask backend.
-- `src/pages/*` — main app pages: Home, Login, Profile, Matching, Progress, Notifications.
-- `backend/app.py` — Flask app configuration, API endpoints, CORS, JWT, and static SPA serving.
-- `backend/models.py` — database tables for users, exchanges, and notifications.
-- `backend/seed.py` — creates sample user data for a demo environment.
-- `backend/wsgi.py` — production entrypoint using Waitress.
+## Running Locally
 
-## Database location
-
-The local SQLite database file is created at:
-
-- `backend/barterlearn.db`
-
-If you use the sample `.env.example`, the DB URL is:
-
-```env
-DATABASE_URL=sqlite:///barterlearn.db
-```
-
-## Run locally
-
-### 1. Install frontend packages
-
-```powershell
-npm install
-```
-
-### 2. Install backend packages
+### Terminal 1 — Backend (Flask)
 
 ```powershell
 cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-### 3. Configure backend environment
-
-```powershell
-copy backend\.env.example backend\.env
-```
-
-Edit `backend/.env` only if you want to change the default port, JWT secret, or CORS origins.
-
-### 4. Initialize the database
-
-```powershell
-cd backend
-python -m flask --app app.py db init
-python -m flask --app app.py db migrate -m "initial"
-python -m flask --app app.py db upgrade
-```
-
-### 5. Seed demo users (optional)
-
-```powershell
-python seed.py
-```
-
-### 6. Start the backend API
-
-```powershell
+copy .env.example .env          # first time only
+python -m flask --app app.py db upgrade   # first time only
 python -m flask --app app.py run
 ```
 
-### 7. Start the frontend
+Backend API: http://localhost:5000
 
-In the project root:
-
-```powershell
-npm start
-```
-
-### 8. Open the app
-
-- Frontend: `http://localhost:3000`
-- Backend health check: `http://localhost:5000/api/health`
-
-## Production preview
-
-Build the frontend and run the Flask production server:
+### Terminal 2 — Frontend (React)
 
 ```powershell
-npm run build
-cd backend
-python wsgi.py
+cd frontend
+npm install                     # first time only
+npm run dev
 ```
 
-Then open `http://localhost:5000`.
+Frontend: http://localhost:3000  
+_(Vite automatically proxies `/api` calls to `http://localhost:5000`)_
 
-## Current workflow
+---
 
-1. User logs in or registers via the login page.
-2. The frontend stores a JWT token in `localStorage`.
-3. `src/App.jsx` loads current user data and user list from the backend.
-4. The matching page requests `/api/matches` and displays compatible partners.
-5. Users can update profiles on `/profile` using `/api/users/:id`.
-6. Exchange progress is visible on `/progress` from `/api/exchanges`.
-7. Notifications are loaded from `/api/notifications` and can be marked read.
+## Deploying to Production
 
-## Notes
+### Backend → Render
 
-- The app is now easier to run with a clear backend environment template.
-- The `matching` page now uses actual API data and creates exchanges for better interactivity.
-- The backend seed script now initializes the DB tables before inserting sample users.
-- See `PROJECT_OVERVIEW.md` for architecture and user flows.
+1. Push this repo to GitHub.
+2. On [render.com](https://render.com), click **New → Blueprint** and connect your repo — `render.yaml` handles everything automatically.
+3. Set these environment variables in your Render service:
+   | Key | Value |
+   |-----|-------|
+   | `JWT_SECRET_KEY` | any long random string |
+   | `FLASK_ENV` | `production` |
+   | `DATABASE_URL` | auto-filled from linked PostgreSQL |
+
+### Frontend → Vercel
+
+1. On [vercel.com](https://vercel.com), click **New Project** and import your repo.
+2. Set **Root Directory** to `frontend`.
+3. Set this environment variable:
+   | Key | Value |
+   |-----|-------|
+   | `VITE_API_BASE` | `https://barterlearn-collaborative-learning.onrender.com` |
+4. Deploy — Vercel picks up `vercel.json` for SPA routing automatically.
+
+---
+
+## Authentication Flow
+
+1. User registers → `POST /api/register` → password hashed with Werkzeug.
+2. User logs in → `POST /api/login` → receives JWT access token.
+3. Token stored in `localStorage` and attached to all subsequent requests as `Authorization: Bearer <token>`.
+4. Protected routes call `GET /api/me` to restore session on page refresh.
+
+## API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/register` | No | Register new user |
+| POST | `/api/login` | No | Login, returns JWT |
+| GET | `/api/me` | Yes | Current user profile |
+| GET | `/api/users` | Yes | All users |
+| PUT | `/api/users/:id` | Yes | Update user profile |
+| GET | `/api/matches` | Yes | Skill-based matches |
+| GET | `/api/exchanges` | Yes | All exchanges |
+| POST | `/api/exchanges` | Yes | Create exchange |
+| PATCH | `/api/exchanges/:id` | Yes | Update exchange |
+| GET | `/api/notifications` | Yes | User notifications |
+| PATCH | `/api/notifications/:id/read` | Yes | Mark notification read |
+| GET | `/api/stats` | Yes | Platform + user stats |
+| GET | `/api/health` | No | Health check |

@@ -13,7 +13,7 @@ import secrets
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
-app = Flask(__name__, static_folder=os.path.join(basedir, '../dist'), static_url_path='/')
+app = Flask(__name__, static_folder=os.path.join(basedir, '../frontend/dist'), static_url_path='/')
 
 # Configure logging
 logging.basicConfig(
@@ -22,29 +22,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///barterlearn.db')
+db_url = os.getenv('DATABASE_URL', 'sqlite:///barterlearn.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # JWT Secret Key Configuration
-jwt_secret = os.getenv('JWT_SECRET_KEY')
-if not jwt_secret:
-    if os.getenv('FLASK_ENV') == 'production':
-        raise RuntimeError("JWT_SECRET_KEY environment variable must be set in production")
-    else:
-        # Generate a random secret for development
-        jwt_secret = secrets.token_hex(32)
-        print("WARNING: Using auto-generated JWT secret for development. Set JWT_SECRET_KEY environment variable for production.")
-app.config['JWT_SECRET_KEY'] = jwt_secret
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key-replace-in-prod')
 
 # Secure CORS
-allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(',')
-CORS(app, origins=allowed_origins)
+CORS(app, origins="*")
 
 db.init_app(app)
 migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
 from models import User, Exchange, Notification
+
+with app.app_context():
+    db.create_all()
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -75,14 +72,14 @@ def register():
     
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
+    password = str(data.get('password', ''))
     
-    if not name or len(name) < 2:
+    if not name or len(str(name)) < 2:
         return jsonify({'msg': 'Name must be at least 2 characters long'}), 400
-    if not email or '@' not in email:
+    if not email or '@' not in str(email):
         return jsonify({'msg': 'Valid email is required'}), 400
-    if not password or len(password) < 6:
-        return jsonify({'msg': 'Password must be at least 6 characters long'}), 400
+    if not password:
+        return jsonify({'msg': 'Password is required'}), 400
     
     if User.query.filter_by(email=email).first():
         return jsonify({'msg': 'Email already registered'}), 400
@@ -100,9 +97,10 @@ def register():
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data.get('email')).first()
-    if not user or not check_password_hash(user.password, data.get('password')):
+    password = str(data.get('password', ''))
+    if not user or not check_password_hash(user.password, password):
         return jsonify({'msg': 'Bad credentials'}), 401
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return jsonify({'access_token': access_token})
 
 @app.route('/api/users', methods=['GET'])

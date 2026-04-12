@@ -1,39 +1,39 @@
-How to run the BarterLearn Project (Local Development)
+How to Run BarterLearn Locally
+==============================
 
-Since this project consists of an independent Frontend (React) and Backend (Flask), you will need two separate terminal windows.
+You need TWO terminal windows — one for backend, one for frontend.
 
------------------------------------------
-TERMINAL 1: Starting the Backend (Flask)
------------------------------------------
-1. Open a terminal and navigate to the project root folder.
-2. Change directory into the backend folder:
-   > cd backend
-3. Create and activate a Python virtual environment:
-   > python -m venv venv
-   > venv\Scripts\activate
-4. Install all required Python packages:
-   > pip install -r requirements.txt
-5. Set up the environment variables (First time only):
-   > copy .env.example .env
-6. Set up the Database (First time only):
-   > python -m flask --app app.py db init
-   > python -m flask --app app.py db migrate -m "initial creation"
-   > python -m flask --app app.py db upgrade
-   > python seed.py
-7. Start the backend Flask server:
-   > python -m flask --app app.py run
+=========================================
+TERMINAL 1: Backend (Flask API)
+=========================================
+1. cd backend
+2. python -m venv venv
+   venv\Scripts\activate
+3. pip install -r requirements.txt
+4. (First time only) copy .env.example .env
+5. (First time only) python -m flask --app app.py db upgrade
+6. python -m flask --app app.py run
 
-   The backend API will now be running on http://localhost:5000. Keep this terminal open!
+   Backend runs at: http://localhost:5000
+   Keep this terminal open!
 
------------------------------------------
-TERMINAL 2: Starting the Frontend (React via Vite)
------------------------------------------
-1. Open a new terminal and navigate to the project root folder (the barterlearn directory, outside of the backend folder).
-2. Install necessary Node.js packages (First time only):
-   > npm install
-3. Start the frontend development server:
-   > npm start
+=========================================
+TERMINAL 2: Frontend (React via Vite)
+=========================================
+1. cd frontend
+2. (First time only) npm install
+3. npm run dev
 
-   The frontend interface will now load. Typically, Vite provides a local URL like http://localhost:5173 or http://localhost:3000.
+   Frontend runs at: http://localhost:3000
+   Vite proxies /api calls to http://localhost:5000 automatically.
 
-You can now open your browser and navigate to the frontend URL to use the application!
+=========================================
+PRODUCTION DEPLOYMENT
+=========================================
+Backend → Render:
+  - render.yaml handles setup automatically
+  - Set JWT_SECRET_KEY, FLASK_ENV=production, DATABASE_URL in Render dashboard
+
+Frontend → Vercel:
+  - Set Root Directory to: frontend
+  - Set VITE_API_BASE=https://barterlearn-collaborative-learning.onrender.com in Vercel dashboard
