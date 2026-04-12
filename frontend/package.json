@@ -9,14 +9,19 @@
     "preview": "vite preview",
     "start": "vite"
   },
-  "keywords": ["learning", "education", "skill-exchange", "marketplace"],
+  "keywords": [
+    "learning",
+    "education",
+    "skill-exchange",
+    "marketplace"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "lucide-react": "^0.395.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.22.3",
-    "lucide-react": "^0.395.0"
+    "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
