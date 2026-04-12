@@ -1,8 +1,25 @@
-from app import app
 import os
+from app import app
+
+# Production server
 from waitress import serve
 
-if __name__ == "__main__":
+
+def start():
     port = int(os.getenv("PORT", 5000))
-    print(f"Starting production server on port {port}...")
-    serve(app, host="0.0.0.0", port=port)
+
+    print("===================================")
+    print("🚀 Starting BarterLearn Backend")
+    print(f"🌐 Running on port {port}")
+    print("===================================")
+
+    serve(
+        app,
+        host="0.0.0.0",
+        port=port,
+        threads=8
+    )
+
+
+if __name__ == "__main__":
+    start()
