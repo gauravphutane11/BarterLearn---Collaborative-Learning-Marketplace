@@ -16,7 +16,7 @@ const Profile = ({ currentUser, updateUser }) => {
   // ✅ FIXED SAVE FUNCTION
   const handleSave = async () => {
     try {
-      await updateUser(formData); // send only editable fields
+      await updateUser(currentUser.id, formData); // send only editable fields
       setIsEditing(false);
     } catch (error) {
       console.error(error);

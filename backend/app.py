@@ -118,24 +118,27 @@ def get_user(user_id):
 @app.route('/api/users/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def update_user(user_id):
-    if get_jwt_identity() != user_id:
+    current_user_id = int(get_jwt_identity())
+
+    # Allow only the logged-in user to update their profile
+    if current_user_id != user_id:
         return jsonify({'msg': 'Unauthorized'}), 403
+
     data = request.get_json()
     user = User.query.get_or_404(user_id)
 
-    mapped_updates = {
-        'name': data.get('name'),
-        'bio': data.get('bio'),
-        'avatar': data.get('avatar'),
-        'skills_offered': data.get('skills_offered') or data.get('skillsOffered'),
-        'skills_wanted': data.get('skills_wanted') or data.get('skillsWanted')
-    }
+    user.name = data.get('name', user.name)
+    user.bio = data.get('bio', user.bio)
+    user.avatar = data.get('avatar', user.avatar)
 
-    for field, value in mapped_updates.items():
-        if value is not None:
-            setattr(user, field, value)
+    if data.get('skillsOffered'):
+        user.skills_offered = data.get('skillsOffered')
+
+    if data.get('skillsWanted'):
+        user.skills_wanted = data.get('skillsWanted')
 
     db.session.commit()
+
     return jsonify(user.to_dict())
 
 @app.route('/api/exchanges', methods=['GET'])
