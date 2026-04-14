@@ -1,326 +1,218 @@
 import React, { useState } from "react";
-import { LogIn } from "lucide-react";
+import { LogIn, UserPlus, Zap } from "lucide-react";
 import { api } from "../api";
 
-const Login = ({ onLogin }) => {
-
+export default function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    if (!email || !password) {
-      alert("Please enter email and password");
+    if (!formData.email || !formData.password || (isRegister && !formData.name)) {
+      alert("Please fill all required fields");
       return;
     }
 
     try {
-
       setLoading(true);
-
-      await onLogin(email, password);
-
+      if (isRegister) {
+        await api.register(formData);
+        alert("Registration successful. Please login.");
+        setIsRegister(false);
+        setFormData(p => ({ ...p, password: "" }));
+      } else {
+        await onLogin(formData.email, formData.password);
+      }
     } catch (err) {
-
-      console.error("Login error", err);
-      alert("Login failed");
-
+      console.error(err);
+      alert(err?.message || (isRegister ? "Registration failed" : "Login failed"));
     } finally {
-
       setLoading(false);
-
     }
-
-  };
-
-  const handleRegister = async () => {
-
-    if (!name || !email || !password) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    try {
-
-      setLoading(true);
-
-      await api.register({
-        name,
-        email,
-        password
-      });
-
-      alert("Registration successful. Please login.");
-
-      setIsRegister(false);
-      setPassword("");
-
-    } catch (err) {
-
-      console.error("Register error", err);
-      alert(err?.message || "Registration failed");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
   };
 
   return (
-
     <div style={styles.container}>
+      {/* Decorative Orbs */}
+      <div style={{ ...styles.orb, top: "-10%", left: "-10%", background: "var(--primary)" }} className="anim-float delay-1" />
+      <div style={{ ...styles.orb, bottom: "-10%", right: "-10%", background: "var(--secondary)" }} className="anim-float delay-3" />
 
-      <div style={styles.loginBox}>
-
+      <div style={styles.loginCard} className="glass-card-static anim-scaleIn">
+        
         <div style={styles.header}>
-
-          <span style={styles.logo}>📚</span>
-
+          <div style={styles.logoBox}>
+            <Zap size={32} color="#fff" />
+          </div>
           <h1 style={styles.title}>BarterLearn</h1>
-
           <p style={styles.subtitle}>
-            Collaborative Learning Marketplace
+            {isRegister ? "Join the skill exchange network" : "Welcome back. Log in to continue."}
           </p>
-
         </div>
 
-        <div style={styles.form}>
-
+        <form onSubmit={handleSubmit} style={styles.form}>
           {isRegister && (
-            <>
-              <label style={styles.label}>Name</label>
-
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
               <input
+                className="form-input"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={styles.input}
-                placeholder="Enter your name"
+                placeholder="e.g. Jane Doe"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
-            </>
+            </div>
           )}
 
-          <label style={styles.label}>Email</label>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input
+              className="form-input"
+              type="email"
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={e => setFormData({ ...formData, email: e.target.value })}
+            />
+          </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={styles.input}
-            placeholder="Enter your email"
-          />
-
-          <label style={styles.label}>Password</label>
-
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-            placeholder="Enter your password"
-          />
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input
+              className="form-input"
+              type="password"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={e => setFormData({ ...formData, password: e.target.value })}
+            />
+          </div>
 
           <button
-            onClick={isRegister ? handleRegister : handleLogin}
+            type="submit"
+            className="btn btn-primary"
+            style={styles.submitBtn}
             disabled={loading}
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
-            }}
           >
-
-            <LogIn size={20} />
-
-            {loading
-              ? "Please wait..."
-              : isRegister
-                ? "Register"
-                : "Login"}
-
+            {loading ? (
+              <div className="spinner" />
+            ) : isRegister ? (
+              <><UserPlus size={18} /> Create Account</>
+            ) : (
+              <><LogIn size={18} /> Sign In</>
+            )}
           </button>
+        </form>
 
-          <p
-            style={styles.toggleText}
-            onClick={() => setIsRegister(!isRegister)}
-          >
-
-            {isRegister
-              ? "Already have an account? Login"
-              : "Don't have an account? Register"}
-
+        <div style={styles.footer}>
+          <p style={styles.toggleText}>
+            {isRegister ? "Already have an account?" : "New to BarterLearn?"}{" "}
+            <span
+              style={styles.toggleLink}
+              onClick={() => setIsRegister(!isRegister)}
+            >
+              {isRegister ? "Log in instead" : "Create an account"}
+            </span>
           </p>
-
         </div>
 
-        <div style={styles.info}>
-
-          <p style={styles.infoText}>
-            ℹ️ This is a demo platform for collaborative skill exchange.
-          </p>
-
+        {/* Demo Note */}
+        <div style={styles.demoNote}>
+          <p>ℹ️ Demo mode: Use <b>test@test.com</b> / <b>password</b></p>
         </div>
-
       </div>
-
     </div>
-
   );
-
-};
+}
 
 const styles = {
-
   container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
     minHeight: "100vh",
-
-    background:
-      "linear-gradient(135deg,#4f46e5,#6366f1,#8b5cf6)",
-
-    padding: "20px"
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "20px",
+    position: "relative",
+    overflow: "hidden",
+    background: "var(--bg-base)",
   },
-
-  loginBox: {
-
-    background: "white",
-
-    borderRadius: "20px",
-
-    padding: "40px",
-
-    maxWidth: "420px",
+  orb: {
+    position: "absolute",
+    width: "40vw",
+    height: "40vw",
+    borderRadius: "50%",
+    filter: "blur(100px)",
+    opacity: 0.15,
+    zIndex: 0,
+    pointerEvents: "none",
+  },
+  loginCard: {
+    position: "relative",
+    zIndex: 1,
     width: "100%",
-
-    boxShadow:
-      "0 25px 70px rgba(0,0,0,0.25)"
-
+    maxWidth: "440px",
+    padding: "40px",
+    border: "1px solid rgba(255,255,255,0.1)",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.15)",
   },
-
   header: {
     textAlign: "center",
-    marginBottom: "30px"
+    marginBottom: "32px",
   },
-
-  logo: {
-    fontSize: "60px",
-    display: "block",
-    marginBottom: "10px"
+  logoBox: {
+    width: "64px",
+    height: "64px",
+    borderRadius: "18px",
+    background: "linear-gradient(135deg, var(--primary), var(--primary-dark))",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 20px",
+    boxShadow: "0 8px 24px var(--primary-glow)",
   },
-
   title: {
-    fontSize: "32px",
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: "6px"
+    fontSize: "28px",
+    fontWeight: "800",
+    color: "#fff",
+    marginBottom: "8px",
+    letterSpacing: "-0.02em",
   },
-
   subtitle: {
-    fontSize: "14px",
-    color: "#6b7280"
+    fontSize: "15px",
+    color: "var(--text-secondary)",
   },
-
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: "14px"
+    gap: "20px",
   },
-
-  label: {
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#374151"
-  },
-
-  input: {
-
-    padding: "12px",
-
-    borderRadius: "10px",
-
-    border: "1px solid #d1d5db",
-
-    fontSize: "14px",
-
-    outline: "none"
-
-  },
-
-  button: {
-
-    marginTop: "10px",
-
+  submitBtn: {
+    marginTop: "8px",
     padding: "14px",
-
-    borderRadius: "12px",
-
-    border: "none",
-
-    background:
-      "linear-gradient(135deg,#6366f1,#8b5cf6)",
-
-    color: "white",
-
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-
-    gap: "8px",
-
-    cursor: "pointer",
-
-    fontWeight: "600",
-
-    fontSize: "15px",
-
-    transition: "all 0.2s"
-
+    fontSize: "16px",
+    width: "100%",
   },
-
-  buttonDisabled: {
-    opacity: 0.6,
-    cursor: "not-allowed"
-  },
-
-  toggleText: {
-
+  footer: {
+    marginTop: "24px",
     textAlign: "center",
-
-    fontSize: "13px",
-
-    color: "#6366f1",
-
+  },
+  toggleText: {
+    fontSize: "14px",
+    color: "var(--text-secondary)",
+  },
+  toggleLink: {
+    color: "var(--primary-light)",
+    fontWeight: "600",
     cursor: "pointer",
-
-    marginTop: "10px"
-
+    transition: "color 0.2s",
   },
-
-  info: {
-
-    marginTop: "20px",
-
-    padding: "14px",
-
-    background: "#fef3c7",
-
-    borderRadius: "10px"
-
-  },
-
-  infoText: {
+  demoNote: {
+    marginTop: "32px",
+    padding: "16px",
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid var(--border)",
+    borderRadius: "12px",
     fontSize: "13px",
-    color: "#92400e"
-  }
-
+    color: "var(--text-muted)",
+    textAlign: "center",
+  },
 };
-
-export default Login;

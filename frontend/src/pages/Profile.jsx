@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Plus, X, Save, Award } from "lucide-react";
+import { Plus, X, Save, Award, Edit2, Shield, User } from "lucide-react";
 import { popularSkills } from "../data/staticData";
 
-const Profile = ({ currentUser = {}, updateUser }) => {
+export default function Profile({ currentUser = {}, updateUser }) {
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -18,378 +18,300 @@ const Profile = ({ currentUser = {}, updateUser }) => {
     try {
       await updateUser(formData);
       setIsEditing(false);
-      alert("Profile updated successfully");
     } catch (error) {
       console.error(error);
-      alert("Failed to update profile");
     }
   };
 
-  const addSkillOffered = () => {
-    if (newSkillOffered && !formData.skillsOffered.includes(newSkillOffered)) {
+  const addSkill = (type) => {
+    const skill = type === 'offered' ? newSkillOffered : newSkillWanted;
+    const targetArray = type === 'offered' ? formData.skillsOffered : formData.skillsWanted;
+    
+    if (skill && !targetArray.includes(skill)) {
       setFormData({
         ...formData,
-        skillsOffered: [...formData.skillsOffered, newSkillOffered]
+        [type === 'offered' ? 'skillsOffered' : 'skillsWanted']: [...targetArray, skill]
       });
-      setNewSkillOffered("");
+      type === 'offered' ? setNewSkillOffered("") : setNewSkillWanted("");
     }
   };
 
-  const addSkillWanted = () => {
-    if (newSkillWanted && !formData.skillsWanted.includes(newSkillWanted)) {
-      setFormData({
-        ...formData,
-        skillsWanted: [...formData.skillsWanted, newSkillWanted]
-      });
-      setNewSkillWanted("");
-    }
-  };
-
-  const removeSkillOffered = (skill) => {
+  const removeSkill = (type, skillToRemove) => {
+    const key = type === 'offered' ? 'skillsOffered' : 'skillsWanted';
     setFormData({
       ...formData,
-      skillsOffered: formData.skillsOffered.filter((s) => s !== skill)
-    });
-  };
-
-  const removeSkillWanted = (skill) => {
-    setFormData({
-      ...formData,
-      skillsWanted: formData.skillsWanted.filter((s) => s !== skill)
+      [key]: formData[key].filter(s => s !== skillToRemove)
     });
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>My Profile</h1>
-
+    <div className="page-container-sm" style={styles.container}>
+      {/* HEADER */}
+      <div className="section-header anim-fadeInUp">
+        <div>
+          <h1 className="section-title">My Profile</h1>
+          <p className="section-subtitle">Manage your personal information and skills.</p>
+        </div>
         {!isEditing ? (
-          <button onClick={() => setIsEditing(true)} style={styles.editButton}>
-            Edit Profile
+          <button className="btn btn-ghost" onClick={() => setIsEditing(true)}>
+            <Edit2 size={16} /> Edit Profile
           </button>
         ) : (
-          <div style={styles.editActions}>
-            <button
-              onClick={() => setIsEditing(false)}
-              style={styles.cancelButton}
-            >
-              Cancel
-            </button>
-
-            <button onClick={handleSave} style={styles.saveButton}>
-              <Save size={18} />
-              Save Changes
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button className="btn btn-ghost" onClick={() => setIsEditing(false)}>Cancel</button>
+            <button className="btn btn-success" onClick={handleSave}>
+              <Save size={16} /> Save Changes
             </button>
           </div>
         )}
       </div>
 
-      <div style={styles.profileCard}>
-        <div style={styles.profileHeader}>
-          <span style={styles.avatar}>{currentUser?.avatar || "🙂"}</span>
-
-          <div>
-            <h2 style={styles.name}>{currentUser?.name || "User"}</h2>
-
-            <p style={styles.email}>{currentUser?.email}</p>
-
-            <div style={styles.stats}>
-              <span style={styles.statBadge}>
-                <Award size={16} />
-                {currentUser?.rating || 0} ⭐
-              </span>
-
-              <span style={styles.statBadge}>
-                {currentUser?.completedExchanges || 0} exchanges
-              </span>
+      <div style={styles.grid}>
+        {/* IDENTiTY CARD */}
+        <div className="glass-card-static anim-fadeInUp delay-1" style={styles.card}>
+          <div style={styles.identityTop}>
+            <div className="avatar-ring">
+              <div className="avatar-inner" style={{ width: 80, height: 80, fontSize: 40 }}>
+                {currentUser?.avatar || "🙂"}
+              </div>
+            </div>
+            <div style={styles.identityInfo}>
+              <h2 style={styles.name}>{currentUser?.name || "User"}</h2>
+              <p style={styles.email}>{currentUser?.email}</p>
+              
+              <div style={styles.badges}>
+                <span className="badge badge-primary">
+                  <Shield size={12} /> Verified Member
+                </span>
+                <span className="badge badge-warning">
+                  <Award size={12} /> {currentUser?.rating || 0} Rating
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style={styles.bioSection}>
-          <h3 style={styles.sectionTitle}>Bio</h3>
+          <div className="divider" />
 
-          {isEditing ? (
-            <textarea
-              value={formData.bio}
-              onChange={(e) =>
-                setFormData({ ...formData, bio: e.target.value })
-              }
-              style={styles.textarea}
-            />
-          ) : (
-            <p style={styles.bio}>{currentUser?.bio || "No bio added yet."}</p>
-          )}
-        </div>
-      </div>
-
-      <div style={styles.skillsGrid}>
-        {/* Skills Offered */}
-        <div style={styles.skillCard}>
-          <h3 style={styles.skillCardTitle}>Skills I Offer 🎓</h3>
-
-          <div style={styles.skillList}>
-            {(isEditing
-              ? formData.skillsOffered
-              : currentUser?.skillsOffered || []
-            ).map((skill, index) => (
-              <span key={index} style={styles.skillTag}>
-                {skill}
-
-                {isEditing && (
-                  <button
-                    onClick={() => removeSkillOffered(skill)}
-                    style={styles.removeButton}
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </span>
-            ))}
+          <div className="form-group">
+            <label className="form-label">About Me</label>
+            {isEditing ? (
+              <textarea
+                className="form-input form-textarea"
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                placeholder="Write a short bio about yourself..."
+              />
+            ) : (
+              <p style={styles.bioText}>
+                {currentUser?.bio || <span style={{ opacity: 0.5 }}>No bio provided yet. Click "Edit Profile" to add one.</span>}
+              </p>
+            )}
           </div>
+        </div>
 
-          {isEditing && (
-            <div style={styles.addSkillSection}>
-              <select
-                value={newSkillOffered}
-                onChange={(e) => setNewSkillOffered(e.target.value)}
-                style={styles.select}
-              >
-                <option value="">Select skill</option>
+        {/* SKILLS CARDS */}
+        <div style={styles.skillsWrapper}>
+          {/* SKILLS OFFERED */}
+          <div className="glass-card-static anim-fadeInUp delay-2" style={styles.card}>
+            <div style={styles.cardHeader}>
+              <h3 style={styles.cardTitle}>Skills I Offer</h3>
+              <span className="badge badge-primary">{formData.skillsOffered.length}</span>
+            </div>
+            <p style={styles.cardDesc}>Skills you are proficient in and willing to teach others.</p>
 
-                {popularSkills
-                  .filter((s) => !formData.skillsOffered.includes(s))
-                  .map((skill, index) => (
-                    <option key={index} value={skill}>
+            <div style={styles.skillBox}>
+              {(isEditing ? formData.skillsOffered : currentUser?.skillsOffered || []).length === 0 && !isEditing ? (
+                <p className="text-muted text-sm">No skills added.</p>
+              ) : (
+                <div style={styles.skillTags}>
+                  {(isEditing ? formData.skillsOffered : currentUser?.skillsOffered || []).map((skill, idx) => (
+                    <span key={idx} className="skill-tag skill-tag-offered anim-scaleIn">
                       {skill}
-                    </option>
+                      {isEditing && (
+                        <button style={styles.removeBtn} onClick={() => removeSkill('offered', skill)}>
+                          <X size={12} />
+                        </button>
+                      )}
+                    </span>
                   ))}
-              </select>
+                </div>
+              )}
 
-              <button onClick={addSkillOffered} style={styles.addButton}>
-                <Plus size={18} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Skills Wanted */}
-        <div style={styles.skillCard}>
-          <h3 style={styles.skillCardTitle}>Skills I Want 📚</h3>
-
-          <div style={styles.skillList}>
-            {(isEditing
-              ? formData.skillsWanted
-              : currentUser?.skillsWanted || []
-            ).map((skill, index) => (
-              <span
-                key={index}
-                style={{ ...styles.skillTag, ...styles.skillTagWanted }}
-              >
-                {skill}
-
-                {isEditing && (
-                  <button
-                    onClick={() => removeSkillWanted(skill)}
-                    style={styles.removeButton}
+              {isEditing && (
+                <div style={styles.skillInputWrap}>
+                  <select
+                    className="form-input form-select"
+                    value={newSkillOffered}
+                    onChange={(e) => setNewSkillOffered(e.target.value)}
                   >
-                    <X size={14} />
+                    <option value="">Select a skill...</option>
+                    {popularSkills
+                      .filter(s => !formData.skillsOffered.includes(s))
+                      .map((s, i) => <option key={i} value={s}>{s}</option>)}
+                  </select>
+                  <button className="btn btn-primary btn-icon" onClick={() => addSkill('offered')} disabled={!newSkillOffered}>
+                    <Plus size={18} />
                   </button>
-                )}
-              </span>
-            ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {isEditing && (
-            <div style={styles.addSkillSection}>
-              <select
-                value={newSkillWanted}
-                onChange={(e) => setNewSkillWanted(e.target.value)}
-                style={styles.select}
-              >
-                <option value="">Select skill</option>
-
-                {popularSkills
-                  .filter((s) => !formData.skillsWanted.includes(s))
-                  .map((skill, index) => (
-                    <option key={index} value={skill}>
-                      {skill}
-                    </option>
-                  ))}
-              </select>
-
-              <button onClick={addSkillWanted} style={styles.addButton}>
-                <Plus size={18} />
-              </button>
+          {/* SKILLS WANTED */}
+          <div className="glass-card-static anim-fadeInUp delay-3" style={styles.card}>
+            <div style={styles.cardHeader}>
+              <h3 style={styles.cardTitle}>Skills I Want</h3>
+              <span className="badge badge-success">{formData.skillsWanted.length}</span>
             </div>
-          )}
+            <p style={styles.cardDesc}>Skills you want to learn from other members.</p>
+
+            <div style={styles.skillBox}>
+              {(isEditing ? formData.skillsWanted : currentUser?.skillsWanted || []).length === 0 && !isEditing ? (
+                <p className="text-muted text-sm">No skills added.</p>
+              ) : (
+                <div style={styles.skillTags}>
+                  {(isEditing ? formData.skillsWanted : currentUser?.skillsWanted || []).map((skill, idx) => (
+                    <span key={idx} className="skill-tag skill-tag-wanted anim-scaleIn">
+                      {skill}
+                      {isEditing && (
+                        <button style={styles.removeBtn} onClick={() => removeSkill('wanted', skill)}>
+                          <X size={12} />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {isEditing && (
+                <div style={styles.skillInputWrap}>
+                  <select
+                    className="form-input form-select"
+                    value={newSkillWanted}
+                    onChange={(e) => setNewSkillWanted(e.target.value)}
+                  >
+                    <option value="">Select a skill...</option>
+                    {popularSkills
+                      .filter(s => !formData.skillsWanted.includes(s))
+                      .map((s, i) => <option key={i} value={s}>{s}</option>)}
+                  </select>
+                  <button className="btn btn-success btn-icon" onClick={() => addSkill('wanted')} disabled={!newSkillWanted}>
+                    <Plus size={18} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 const styles = {
   container: {
-    maxWidth: "1000px",
-    margin: "0 auto",
-    padding: "40px 20px"
+    paddingBottom: 60
   },
-
-  header: {
+  grid: {
     display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "30px"
+    flexDirection: "column",
+    gap: "24px",
   },
-
-  title: {
-    fontSize: "32px",
-    fontWeight: "700"
+  card: {
+    padding: "32px",
   },
-
-  editButton: {
-    padding: "10px 20px",
-    background: "#6366f1",
-    color: "white",
-    borderRadius: "8px",
-    cursor: "pointer"
-  },
-
-  editActions: {
-    display: "flex",
-    gap: "10px"
-  },
-
-  cancelButton: {
-    padding: "10px 20px",
-    borderRadius: "8px"
-  },
-
-  saveButton: {
+  identityTop: {
     display: "flex",
     alignItems: "center",
-    gap: "6px",
-    padding: "10px 20px",
-    background: "#10b981",
-    color: "white",
-    borderRadius: "8px"
+    gap: "24px",
   },
-
-  profileCard: {
-    background: "white",
-    borderRadius: "12px",
-    padding: "30px",
-    marginBottom: "20px"
-  },
-
-  profileHeader: {
+  identityInfo: {
     display: "flex",
-    gap: "20px"
+    flexDirection: "column",
+    gap: "4px",
   },
-
-  avatar: {
-    fontSize: "70px"
-  },
-
   name: {
-    fontSize: "26px",
-    fontWeight: "700"
+    fontSize: "24px",
+    fontWeight: "800",
+    color: "#fff",
+    letterSpacing: "-0.02em",
+    lineHeight: 1,
   },
-
   email: {
     fontSize: "14px",
-    opacity: 0.7
+    color: "var(--text-secondary)",
+    marginBottom: "8px",
   },
-
-  stats: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "10px"
-  },
-
-  statBadge: {
-    display: "flex",
-    gap: "4px",
-    background: "#f3f4f6",
-    padding: "4px 10px",
-    borderRadius: "10px",
-    fontSize: "12px"
-  },
-
-  bioSection: {
-    marginTop: "20px"
-  },
-
-  sectionTitle: {
-    fontWeight: "600",
-    marginBottom: "8px"
-  },
-
-  bio: {
-    fontSize: "14px"
-  },
-
-  textarea: {
-    width: "100%",
-    padding: "10px",
-    borderRadius: "8px"
-  },
-
-  skillsGrid: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "20px"
-  },
-
-  skillCard: {
-    background: "white",
-    padding: "20px",
-    borderRadius: "12px"
-  },
-
-  skillCardTitle: {
-    marginBottom: "12px"
-  },
-
-  skillList: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "8px"
-  },
-
-  skillTag: {
-    padding: "6px 12px",
-    background: "#e0e7ff",
-    borderRadius: "20px",
-    fontSize: "12px"
-  },
-
-  skillTagWanted: {
-    background: "#d1fae5"
-  },
-
-  removeButton: {
-    marginLeft: "6px"
-  },
-
-  addSkillSection: {
+  badges: {
     display: "flex",
     gap: "8px",
-    marginTop: "10px"
+    flexWrap: "wrap",
   },
-
-  select: {
-    flex: 1,
-    padding: "8px"
+  bioText: {
+    fontSize: "15px",
+    color: "var(--text-primary)",
+    lineHeight: "1.6",
+    background: "rgba(255,255,255,0.02)",
+    padding: "16px",
+    borderRadius: "12px",
+    border: "1px solid var(--border)",
   },
-
-  addButton: {
-    padding: "8px 12px",
-    background: "#6366f1",
-    color: "white",
-    borderRadius: "6px"
+  
+  skillsWrapper: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "24px",
+  },
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "6px",
+  },
+  cardTitle: {
+    fontSize: "18px",
+    fontWeight: "700",
+    color: "#fff",
+  },
+  cardDesc: {
+    fontSize: "13px",
+    color: "var(--text-secondary)",
+    marginBottom: "20px",
+  },
+  skillBox: {
+    background: "rgba(0,0,0,0.2)",
+    padding: "20px",
+    borderRadius: "16px",
+    border: "1px solid var(--border)",
+    minHeight: "140px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  skillTags: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    marginBottom: "auto",
+  },
+  removeBtn: {
+    background: "rgba(0,0,0,0.2)",
+    border: "none",
+    width: "18px",
+    height: "18px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "inherit",
+    cursor: "pointer",
+    padding: 0,
+    marginLeft: "4px",
+  },
+  skillInputWrap: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "24px",
+    paddingTop: "16px",
+    borderTop: "1px dashed var(--border)",
   }
 };
-
-export default Profile;

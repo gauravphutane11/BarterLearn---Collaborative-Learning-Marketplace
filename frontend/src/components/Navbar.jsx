@@ -1,180 +1,352 @@
-import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, User, Users, TrendingUp, Bell, LogOut } from "lucide-react";
+import { useState } from "react";
+import {
+  Home,
+  Users,
+  TrendingUp,
+  Bell,
+  User,
+  LogOut,
+  Zap,
+  Menu,
+  X
+} from "lucide-react";
 
-const Navbar = ({ currentUser, onLogout, unreadNotifications = 0 }) => {
+const NAV_LINKS = [
+  { to: "/",             label: "Home",          icon: Home        },
+  { to: "/matching",     label: "Matching",      icon: Users       },
+  { to: "/progress",     label: "Progress",      icon: TrendingUp  },
+  { to: "/notifications",label: "Notifications", icon: Bell        },
+  { to: "/profile",      label: "Profile",       icon: User        },
+];
+
+export default function Navbar({ currentUser, onLogout, unreadNotifications }) {
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navItems = [
-    { path: "/", icon: Home, label: "Home" },
-    { path: "/profile", icon: User, label: "Profile" },
-    { path: "/matching", icon: Users, label: "Match" },
-    { path: "/progress", icon: TrendingUp, label: "Progress" },
-    {
-      path: "/notifications",
-      icon: Bell,
-      label: "Notifications",
-      badge: unreadNotifications
-    }
-  ];
+  const isActive = (path) =>
+    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
-  const isActive = (path) => location.pathname === path;
-
-  const avatar = currentUser?.avatar || "🙂";
-  const name = currentUser?.name || "User";
+  const initials = currentUser?.name
+    ? currentUser.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "BL";
 
   return (
-    <nav style={styles.nav}>
-      <div style={styles.container}>
-        {/* Brand */}
-        <Link to="/" style={styles.brand}>
-          <span style={styles.logo}>📚</span>
-          <span style={styles.brandName}>BarterLearn</span>
+    <header style={styles.header}>
+      <nav style={styles.nav}>
+
+        {/* ── Logo ── */}
+        <Link to="/" style={styles.logo}>
+          <div style={styles.logoIcon}>
+            <Zap size={16} color="#fff" />
+          </div>
+          <span style={styles.logoText}>BarterLearn</span>
         </Link>
 
-        {/* Navigation */}
-        <div style={styles.navLinks}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-
+        {/* ── Desktop Links ── */}
+        <div style={styles.links}>
+          {NAV_LINKS.map(({ to, label, icon: Icon }) => {
+            const active = isActive(to);
             return (
               <Link
-                key={item.path}
-                to={item.path}
+                key={to}
+                to={to}
                 style={{
-                  ...styles.navLink,
-                  ...(isActive(item.path) ? styles.navLinkActive : {})
+                  ...styles.link,
+                  ...(active ? styles.linkActive : {}),
                 }}
               >
-                <Icon size={18} />
-
-                <span>{item.label}</span>
-
-                {item.badge > 0 && (
-                  <span style={styles.badge}>{item.badge}</span>
+                <Icon size={15} />
+                <span>{label}</span>
+                {label === "Notifications" && unreadNotifications > 0 && (
+                  <span className="notification-dot" style={styles.badge}>
+                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                  </span>
                 )}
+                {active && <span style={styles.activeDot} />}
               </Link>
             );
           })}
         </div>
 
-        {/* User Section */}
-        <div style={styles.userSection}>
-          <span style={styles.avatar}>{avatar}</span>
+        {/* ── Right: Avatar + Logout ── */}
+        <div style={styles.right}>
+          <div style={styles.avatarWrap}>
+            <span style={styles.avatarEmoji}>{currentUser?.avatar || "🙂"}</span>
+            <div style={styles.avatarInfo} className="hide-mobile">
+              <span style={styles.avatarName}>{currentUser?.name || "User"}</span>
+              <span style={styles.avatarSub}>{currentUser?.email?.split("@")[0]}</span>
+            </div>
+          </div>
 
-          <span style={styles.userName}>{name}</span>
+          <button onClick={onLogout} style={styles.logoutBtn} title="Logout">
+            <LogOut size={16} />
+            <span className="hide-mobile">Logout</span>
+          </button>
 
-          <button onClick={onLogout} style={styles.logoutBtn}>
-            <LogOut size={18} />
+          {/* Mobile hamburger */}
+          <button
+            style={styles.hamburger}
+            onClick={() => setMobileOpen((o) => !o)}
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* ── Mobile Menu ── */}
+      {mobileOpen && (
+        <div style={styles.mobileMenu}>
+          {NAV_LINKS.map(({ to, label, icon: Icon }) => {
+            const active = isActive(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                style={{ ...styles.mobileLink, ...(active ? styles.mobileLinkActive : {}) }}
+                onClick={() => setMobileOpen(false)}
+              >
+                <Icon size={17} />
+                {label}
+                {label === "Notifications" && unreadNotifications > 0 && (
+                  <span className="notification-dot">{unreadNotifications}</span>
+                )}
+              </Link>
+            );
+          })}
+          <button onClick={onLogout} style={styles.mobileLogout}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
+      )}
+    </header>
   );
-};
+}
 
 const styles = {
-  nav: {
-    background: "rgba(255,255,255,0.9)",
-    backdropFilter: "blur(12px)",
-    borderBottom: "1px solid rgba(0,0,0,0.05)",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+  header: {
     position: "sticky",
     top: 0,
-    zIndex: 1000
+    zIndex: 900,
+    background: "rgba(8, 14, 26, 0.82)",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+    boxShadow: "0 4px 30px rgba(0,0,0,0.4)",
   },
 
-  container: {
-    maxWidth: "1200px",
+  nav: {
+    maxWidth: "1280px",
     margin: "0 auto",
-    padding: "0 20px",
+    padding: "0 28px",
+    height: "64px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    height: "64px"
+    gap: "16px",
   },
 
-  brand: {
+  /* Logo */
+  logo: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    fontWeight: "700",
-    fontSize: "20px",
     textDecoration: "none",
-    background: "linear-gradient(135deg,#667eea,#764ba2)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent"
+    flexShrink: 0,
   },
-
-  logo: {
-    fontSize: "26px"
-  },
-
-  brandName: {
-    fontWeight: "700"
-  },
-
-  navLinks: {
+  logoIcon: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "10px",
+    background: "linear-gradient(135deg, #6366f1, #4f46e5)",
     display: "flex",
-    gap: "10px",
-    flex: 1,
-    justifyContent: "center"
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 0 14px rgba(99,102,241,0.5)",
+    flexShrink: 0,
+  },
+  logoText: {
+    fontWeight: "800",
+    fontSize: "18px",
+    background: "linear-gradient(120deg, #818cf8, #6366f1)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    backgroundClip: "text",
+    letterSpacing: "-0.02em",
   },
 
-  navLink: {
+  /* Nav Links */
+  links: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    flex: 1,
+    justifyContent: "center",
+  },
+  link: {
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    padding: "10px 16px",
+    padding: "7px 13px",
     borderRadius: "10px",
-    color: "#444",
-    textDecoration: "none",
-    fontSize: "14px",
+    fontSize: "13.5px",
     fontWeight: "500",
-    transition: "all 0.25s ease"
+    color: "rgba(148,163,184,0.85)",
+    textDecoration: "none",
+    transition: "all 0.2s",
+    position: "relative",
+    whiteSpace: "nowrap",
   },
-
-  navLinkActive: {
-    background: "linear-gradient(135deg,#667eea,#764ba2)",
-    color: "#fff",
-    boxShadow: "0 4px 12px rgba(102,126,234,0.4)"
+  linkActive: {
+    background: "rgba(99,102,241,0.14)",
+    color: "#818cf8",
+    fontWeight: "600",
+    boxShadow: "inset 0 0 0 1px rgba(99,102,241,0.25)",
   },
-
+  activeDot: {
+    position: "absolute",
+    bottom: "2px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    width: "4px",
+    height: "4px",
+    borderRadius: "50%",
+    background: "#6366f1",
+  },
   badge: {
-    background: "#ef4444",
-    color: "white",
-    borderRadius: "10px",
-    padding: "2px 6px",
     fontSize: "10px",
-    fontWeight: "bold",
-    marginLeft: "4px"
+    minWidth: "16px",
+    height: "16px",
+    padding: "0 4px",
   },
 
-  userSection: {
+  /* Right section */
+  right: {
     display: "flex",
     alignItems: "center",
-    gap: "10px"
+    gap: "10px",
+    flexShrink: 0,
   },
 
-  avatar: {
-    fontSize: "24px"
+  avatarWrap: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "6px 12px",
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.07)",
+    borderRadius: "12px",
   },
-
-  userName: {
-    fontSize: "14px",
+  avatarEmoji: {
+    fontSize: "22px",
+    lineHeight: 1,
+  },
+  avatarInfo: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  avatarName: {
+    fontSize: "13px",
     fontWeight: "600",
-    color: "#333"
+    color: "#f1f5f9",
+    lineHeight: 1.2,
+  },
+  avatarSub: {
+    fontSize: "11px",
+    color: "#64748b",
   },
 
   logoutBtn: {
-    padding: "8px",
-    borderRadius: "8px",
-    border: "none",
-    background: "transparent",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "8px 14px",
+    borderRadius: "10px",
+    background: "rgba(244,63,94,0.1)",
+    border: "1px solid rgba(244,63,94,0.2)",
+    color: "#fb7185",
+    fontSize: "13px",
+    fontWeight: "600",
+    transition: "all 0.2s",
     cursor: "pointer",
-    color: "#555",
-    transition: "all 0.2s ease"
-  }
+  },
+
+  hamburger: {
+    display: "none",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "36px",
+    height: "36px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "10px",
+    color: "#94a3b8",
+    cursor: "pointer",
+  },
+
+  /* Mobile menu */
+  mobileMenu: {
+    display: "none",
+    flexDirection: "column",
+    gap: "4px",
+    padding: "12px 16px 16px",
+    borderTop: "1px solid rgba(255,255,255,0.06)",
+    background: "rgba(8,14,26,0.95)",
+  },
+  mobileLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    color: "#94a3b8",
+    fontSize: "14px",
+    fontWeight: "500",
+    textDecoration: "none",
+    transition: "all 0.2s",
+  },
+  mobileLinkActive: {
+    background: "rgba(99,102,241,0.14)",
+    color: "#818cf8",
+  },
+  mobileLogout: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    background: "rgba(244,63,94,0.08)",
+    border: "1px solid rgba(244,63,94,0.2)",
+    color: "#fb7185",
+    fontSize: "14px",
+    fontWeight: "600",
+    cursor: "pointer",
+    marginTop: "4px",
+  },
 };
 
-export default Navbar;
+/* Add responsive styles via a single <style> tag approach */
+if (typeof document !== "undefined") {
+  const styleId = "navbar-responsive";
+  if (!document.getElementById(styleId)) {
+    const el = document.createElement("style");
+    el.id = styleId;
+    el.textContent = `
+      @media (max-width: 768px) {
+        nav .navbar-links { display: none !important; }
+        header [data-hamburger] { display: flex !important; }
+        header [data-mobile-menu] { display: flex !important; }
+      }
+      header a:hover:not([class*="Active"]) {
+        background: rgba(255,255,255,0.06);
+        color: #f1f5f9 !important;
+      }
+      header button[title="Logout"]:hover {
+        background: rgba(244,63,94,0.18) !important;
+        box-shadow: 0 0 12px rgba(244,63,94,0.2) !important;
+      }
+    `;
+    document.head.appendChild(el);
+  }
+}

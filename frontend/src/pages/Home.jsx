@@ -7,10 +7,11 @@ import {
   Award,
   ArrowRight,
   MessageSquare,
-  Zap
+  Zap,
+  Sparkles
 } from "lucide-react";
 
-const Home = ({ currentUser = {}, users = [] }) => {
+export default function Home({ currentUser = {}, users = [] }) {
   const navigate = useNavigate();
 
   const stats = [
@@ -18,123 +19,117 @@ const Home = ({ currentUser = {}, users = [] }) => {
       icon: Users,
       label: "Active Matches",
       value: currentUser?.activeMatches?.length || 0,
-      color: "#6366f1"
+      color: "var(--primary-light)",
     },
     {
       icon: Video,
       label: "Sessions This Month",
       value: 8,
-      color: "#10b981"
+      color: "var(--secondary-light)",
     },
     {
       icon: TrendingUp,
       label: "Completed Exchanges",
       value: currentUser?.completedExchanges || 0,
-      color: "#f59e0b"
+      color: "var(--accent)",
     },
     {
       icon: Award,
       label: "Rating",
       value: `${currentUser?.rating || 0} ⭐`,
-      color: "#f43f5e"
-    }
+      color: "var(--danger)",
+    },
   ];
 
   const steps = [
     {
       icon: Users,
       title: "Find a Partner",
-      desc: "Browse users who want what you teach."
+      desc: "Browse users who want what you teach.",
     },
     {
       icon: MessageSquare,
       title: "Connect & Chat",
-      desc: "Discuss your learning goals and schedule."
+      desc: "Discuss your learning goals and schedule.",
     },
     {
       icon: Zap,
       title: "Learn & Teach",
-      desc: "Jump into a video session and start trading."
-    }
+      desc: "Jump into a video session and start trading.",
+    },
   ];
 
   const suggestedMatches =
     users?.filter((u) => u?.id !== currentUser?.id)?.slice(0, 3) || [];
 
   return (
-    <div style={styles.container}>
-      {/* HERO */}
-      <section style={styles.heroSection}>
-        <div style={styles.heroContent}>
-          <h1 style={styles.heroTitle}>
-            Master New Skills through Collaboration
-          </h1>
+    <div className="page-container" style={styles.container}>
+      {/* ── HERO SECTION ── */}
+      <section style={styles.heroSection} className="anim-fadeInUp">
+        <div style={styles.heroBadge}>
+          <Sparkles size={14} color="#f59e0b" />
+          <span>The New Way to Learn</span>
+        </div>
+        <h1 style={styles.heroTitle}>
+          Learn Anything. <br />
+          <span className="gradient-text">Teach Everything.</span>
+        </h1>
+        <p style={styles.heroSubtitle}>
+          Trade your expertise for the skills you want. Join BarterLearn to connect, match, and grow together through collaborative video sessions.
+        </p>
 
-          <p style={styles.heroSubtitle}>
-            Teach what you know and learn what you don't with the BarterLearn
-            skill exchange platform.
-          </p>
-
-          <div style={styles.heroActions}>
-            <button
-              style={styles.primaryBtn}
-              onClick={() => navigate("/matching")}
-            >
-              Explore Matches <ArrowRight size={18} />
-            </button>
-
-            <button
-              style={styles.secondaryBtn}
-              onClick={() => navigate("/profile")}
-            >
-              Edit Profile
-            </button>
-          </div>
+        <div style={styles.heroActions}>
+          <button className="btn btn-primary" onClick={() => navigate("/matching")} style={{ padding: "14px 28px", fontSize: "16px" }}>
+            Explore Matches <ArrowRight size={18} />
+          </button>
+          <button className="btn btn-ghost" onClick={() => navigate("/profile")} style={{ padding: "14px 28px", fontSize: "16px" }}>
+            Edit Profile
+          </button>
         </div>
       </section>
 
-      {/* STATS */}
-      <div style={styles.statsGrid}>
-        {stats.map((stat, index) => {
+      {/* ── STATS ROW ── */}
+      <div style={styles.statsGrid} className="anim-fadeInUp delay-1">
+        {stats.map((stat, idx) => {
           const Icon = stat.icon;
-
           return (
-            <div key={index} style={styles.statCard}>
+            <div key={idx} className="stat-card">
               <div
                 style={{
-                  ...styles.statIcon,
-                  backgroundColor: stat.color + "20",
-                  color: stat.color
+                  ...styles.statIconWrap,
+                  background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}10)`,
+                  color: stat.color,
+                  border: `1px solid ${stat.color}30`,
                 }}
               >
-                <Icon size={22} />
+                <Icon size={24} />
               </div>
-
               <div>
-                <p style={styles.statValue}>{stat.value}</p>
-                <p style={styles.statLabel}>{stat.label}</p>
+                <p className="stat-value">{stat.value}</p>
+                <p className="stat-label">{stat.label}</p>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* HOW IT WORKS */}
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>How BarterLearn Works</h2>
-
+      {/* ── HOW IT WORKS ── */}
+      <section style={styles.section} className="anim-fadeInUp delay-2">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">How BarterLearn Works</h2>
+            <p className="section-subtitle">Three simple steps to start exchanging skills.</p>
+          </div>
+        </div>
         <div style={styles.stepsGrid}>
           {steps.map((step, i) => {
             const Icon = step.icon;
-
             return (
-              <div key={i} style={styles.stepCard}>
-                <div style={styles.stepIcon}>
-                  <Icon size={30} color="#6366f1" />
+              <div key={i} className="glass-card" style={styles.stepCard}>
+                <div style={styles.stepIconBox}>
+                  <Icon size={26} color="var(--primary-light)" />
                 </div>
-
                 <h3 style={styles.stepTitle}>{step.title}</h3>
-
                 <p style={styles.stepDesc}>{step.desc}</p>
               </div>
             );
@@ -142,47 +137,69 @@ const Home = ({ currentUser = {}, users = [] }) => {
         </div>
       </section>
 
-      {/* MATCH PREVIEW */}
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Suggested Matches</h2>
-
-          <button
-            style={styles.textBtn}
-            onClick={() => navigate("/matching")}
-          >
-            View All
+      {/* ── MATCH SUGGESTIONS ── */}
+      <section style={styles.section} className="anim-fadeInUp delay-3">
+        <div className="section-header">
+          <div>
+            <h2 className="section-title">Suggested Matches</h2>
+            <p className="section-subtitle">People looking for the skills you offer.</p>
+          </div>
+          <button className="btn btn-ghost" onClick={() => navigate("/matching")} style={{ fontSize: "13px" }}>
+            View All <ArrowRight size={14} />
           </button>
         </div>
 
         {suggestedMatches.length === 0 ? (
-          <p style={{ textAlign: "center", opacity: 0.7 }}>
-            No matches available yet.
-          </p>
+          <div className="empty-state glass-card-static">
+            <div className="empty-state-icon">
+              <Users size={32} color="var(--text-muted)" />
+            </div>
+            <h3>No Matches Yet</h3>
+            <p style={{ marginTop: 8 }}>Add more skills to your profile to find partners.</p>
+          </div>
         ) : (
-          <div style={styles.matchList}>
-            {suggestedMatches.map((user) => (
-              <div key={user?.id} style={styles.matchItem}>
-                <div style={styles.matchInfo}>
-                  <span style={styles.matchAvatar}>
-                    {user?.avatar || "🙂"}
-                  </span>
-
+          <div style={styles.matchGrid}>
+            {suggestedMatches.map((user, i) => (
+              <div key={user?.id} className="glass-card" style={{ ...styles.matchCard, animationDelay: `${i * 0.1}s` }}>
+                <div style={styles.matchTop}>
+                  <div className="avatar-ring">
+                    <div className="avatar-inner" style={{ width: 48, height: 48 }}>
+                      {user?.avatar || "🙂"}
+                    </div>
+                  </div>
                   <div>
-                    <p style={styles.matchName}>{user?.name || "User"}</p>
-
-                    <p style={styles.matchSkills}>
-                      Offers: {(user?.skillsOffered || []).join(", ")}
-                    </p>
+                    <h3 style={styles.matchName}>{user?.name || "User"}</h3>
+                    <div style={styles.matchRating}>
+                      <Award size={13} color="var(--danger)" />
+                      {user?.rating || "New"}
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  style={styles.matchActionBtn}
-                  onClick={() => navigate("/matching")}
-                >
-                  Connect
-                </button>
+                <div style={styles.matchSkills}>
+                  <div style={styles.skillRow}>
+                    <span style={styles.skillLabel}>Offers:</span>
+                    <div style={styles.skillTags}>
+                      {(user?.skillsOffered || []).slice(0, 2).map((s, idx) => (
+                        <span key={idx} className="skill-tag skill-tag-offered">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={styles.skillRow}>
+                    <span style={styles.skillLabel}>Wants:</span>
+                    <div style={styles.skillTags}>
+                      {(user?.skillsWanted || []).slice(0, 2).map((s, idx) => (
+                        <span key={idx} className="skill-tag skill-tag-wanted">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={styles.matchActions}>
+                  <button className="btn btn-primary" style={{ width: "100%" }} onClick={() => navigate("/matching")}>
+                    Connect
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -190,173 +207,165 @@ const Home = ({ currentUser = {}, users = [] }) => {
       </section>
     </div>
   );
-};
+}
 
 const styles = {
   container: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "20px"
+    paddingBottom: "80px",
   },
-
   heroSection: {
     textAlign: "center",
-    padding: "60px 0"
+    padding: "80px 20px 60px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    position: "relative",
   },
-
+  heroBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 14px",
+    background: "rgba(245, 158, 11, 0.1)",
+    border: "1px solid rgba(245, 158, 11, 0.2)",
+    borderRadius: "99px",
+    color: "#fde68a",
+    fontSize: "13px",
+    fontWeight: "600",
+    marginBottom: "24px",
+    letterSpacing: "0.03em",
+  },
   heroTitle: {
-    fontSize: "40px",
-    fontWeight: "800",
-    marginBottom: "16px"
+    fontSize: "clamp(40px, 6vw, 64px)",
+    fontWeight: "900",
+    lineHeight: "1.1",
+    letterSpacing: "-0.03em",
+    marginBottom: "20px",
+    color: "#fff",
   },
-
   heroSubtitle: {
     fontSize: "18px",
-    opacity: 0.8,
-    marginBottom: "30px"
+    color: "var(--text-secondary)",
+    maxWidth: "600px",
+    margin: "0 auto 36px",
+    lineHeight: "1.6",
   },
-
   heroActions: {
     display: "flex",
+    gap: "16px",
     justifyContent: "center",
-    gap: "16px"
-  },
-
-  primaryBtn: {
-    padding: "12px 24px",
-    background: "#6366f1",
-    color: "white",
-    borderRadius: "10px",
-    cursor: "pointer"
-  },
-
-  secondaryBtn: {
-    padding: "12px 24px",
-    border: "1px solid #ccc",
-    borderRadius: "10px",
-    cursor: "pointer"
+    flexWrap: "wrap",
   },
 
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
     gap: "20px",
-    marginBottom: "60px"
+    marginBottom: "80px",
   },
-
-  statCard: {
-    display: "flex",
-    gap: "16px",
-    padding: "20px",
-    borderRadius: "12px",
-    background: "rgba(255,255,255,0.04)"
-  },
-
-  statIcon: {
+  statIconWrap: {
     width: "48px",
     height: "48px",
-    borderRadius: "12px",
+    borderRadius: "14px",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center"
-  },
-
-  statValue: {
-    fontSize: "22px",
-    fontWeight: "700"
-  },
-
-  statLabel: {
-    fontSize: "13px",
-    opacity: 0.7
+    justifyContent: "center",
   },
 
   section: {
-    marginBottom: "60px"
+    marginBottom: "80px",
   },
-
-  sectionTitle: {
-    fontSize: "28px",
-    fontWeight: "700",
-    marginBottom: "20px"
-  },
-
   stepsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit,minmax(250px,1fr))",
-    gap: "20px"
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "24px",
   },
-
   stepCard: {
-    padding: "30px",
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.04)",
-    textAlign: "center"
-  },
-
-  stepIcon: {
-    marginBottom: "16px"
-  },
-
-  stepTitle: {
-    fontWeight: "600",
-    marginBottom: "10px"
-  },
-
-  stepDesc: {
-    opacity: 0.7
-  },
-
-  sectionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "20px"
-  },
-
-  textBtn: {
-    cursor: "pointer",
-    color: "#6366f1",
-    fontWeight: "600"
-  },
-
-  matchList: {
+    padding: "32px 24px",
+    textAlign: "center",
     display: "flex",
     flexDirection: "column",
-    gap: "12px"
+    alignItems: "center",
   },
-
-  matchItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: "14px",
-    borderRadius: "12px",
-    background: "rgba(255,255,255,0.04)"
-  },
-
-  matchInfo: {
+  stepIconBox: {
+    width: "56px",
+    height: "56px",
+    borderRadius: "16px",
+    background: "rgba(99, 102, 241, 0.1)",
+    border: "1px solid rgba(99, 102, 241, 0.2)",
     display: "flex",
     alignItems: "center",
-    gap: "12px"
+    justifyContent: "center",
+    marginBottom: "20px",
+    boxShadow: "0 0 20px rgba(99, 102, 241, 0.15)",
+  },
+  stepTitle: {
+    fontSize: "18px",
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: "8px",
+  },
+  stepDesc: {
+    fontSize: "14px",
+    color: "var(--text-secondary)",
+    lineHeight: "1.6",
   },
 
-  matchAvatar: {
-    fontSize: "28px"
+  matchGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+    gap: "24px",
   },
-
+  matchCard: {
+    padding: "24px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  },
+  matchTop: {
+    display: "flex",
+    gap: "16px",
+    alignItems: "center",
+  },
   matchName: {
-    fontWeight: "600"
+    fontSize: "18px",
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: "4px",
   },
-
-  matchSkills: {
+  matchRating: {
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
     fontSize: "12px",
-    opacity: 0.7
+    color: "var(--text-muted)",
+    fontWeight: "600",
   },
-
-  matchActionBtn: {
-    padding: "6px 16px",
-    borderRadius: "8px",
-    cursor: "pointer"
-  }
+  matchSkills: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    flex: 1,
+  },
+  skillRow: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  skillLabel: {
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "var(--text-muted)",
+    textTransform: "uppercase",
+  },
+  skillTags: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "6px",
+  },
+  matchActions: {
+    marginTop: "auto",
+    paddingTop: "16px",
+    borderTop: "1px solid var(--border)",
+  },
 };
-
-export default Home;
