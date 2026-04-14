@@ -73,74 +73,80 @@ export default function Matching({ currentUser = {} }) {
         </div>
       ) : (
         <div style={styles.grid}>
-          {matches.map((match, idx) => (
-            <div key={match?.id} className="glass-card hover-lift anim-fadeInUp" style={{ ...styles.card, animationDelay: `${idx * 0.05}s` }}>
-              
-              <div style={styles.cardHeader}>
-                <div style={styles.matchScoreBadge}>
-                  <Target size={14} /> {Math.round(match?.matchScore || 0)}% Match
-                </div>
-                {match?.mutualExchange && (
-                  <div style={styles.mutualBadge} title="Both of you want what the other offers!">
-                    <Heart size={14} /> Mutual
+          {matches.map((match, idx) => {
+            const isHighMatch = match?.matchScore > 85;
+            const mutual = match?.mutualExchange;
+            return (
+              <div 
+                key={match?.id} 
+                className={`glass-card hover-lift anim-fadeInUp ${mutual ? 'flashy-mutual' : ''}`} 
+                style={{ 
+                  ...styles.card, 
+                  animationDelay: `${idx * 0.05}s`,
+                  ...(isHighMatch ? styles.highMatchBorder : {})
+                }}
+              >
+                
+                <div style={styles.cardHeader}>
+                  <div style={styles.matchScoreBadge}>
+                    <Target size={14} /> {Math.round(match?.matchScore || 0)}% Match
                   </div>
-                )}
-              </div>
+                  {mutual && (
+                    <div style={styles.mutualBadge} className="anim-pulseGlow" title="Both of you want what the other offers!">
+                      <Heart size={14} /> Mutual Check
+                    </div>
+                  )}
+                </div>
 
-              <div style={styles.userInfo}>
-                <div className="avatar-ring">
-                  <div className="avatar-inner" style={{ width: 56, height: 56, fontSize: 28 }}>
-                    {match?.avatar || "🙂"}
+                <div style={styles.userInfo}>
+                  <div className="avatar-ring" style={mutual ? { background: 'linear-gradient(135deg, #fb7185, #f43f5e)' } : {}}>
+                    <div className="avatar-inner" style={{ width: 56, height: 56, fontSize: 28 }}>
+                      {match?.avatar || "🙂"}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 style={styles.userName}>{match?.name || "User"}</h3>
+                    <div style={{ ...styles.rating, color: "var(--text-secondary)" }}>
+                      <Star size={13} fill="var(--accent)" color="var(--accent)" />
+                      {match?.rating || "New"}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <h3 style={styles.userName}>{match?.name || "User"}</h3>
-                  <div style={styles.rating}>
-                    <Star size={13} fill="var(--accent)" color="var(--accent)" />
-                    {match?.rating || "New"}
+
+                <p style={{ ...styles.bio, color: "var(--text-primary)" }}>
+                  {match?.bio ? (match.bio.length > 80 ? `${match.bio.substring(0, 80)}...` : match.bio) : "No bio available."}
+                </p>
+
+                <div style={styles.skillsSection}>
+                  <div style={styles.skillGroup}>
+                    <p style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "6px", textTransform: "uppercase" }}>Offers</p>
+                    <div style={styles.skillTags}>
+                      {(match?.skillsOffered || []).slice(0, 3).map((s, i) => (
+                        <span key={i} className="skill-tag skill-tag-offered" style={{ color: "#fff", background: "rgba(99,102,241,0.3)" }}>{s}</span>
+                      ))}
+                    </div>
                   </div>
+                  <div style={styles.skillGroup}>
+                    <p style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "6px", textTransform: "uppercase" }}>Wants</p>
+                    <div style={styles.skillTags}>
+                      {(match?.skillsWanted || []).slice(0, 3).map((s, i) => (
+                        <span key={i} className="skill-tag skill-tag-wanted" style={{ color: "#fff", background: "rgba(16,185,129,0.3)" }}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={styles.actions}>
+                  <button className="btn btn-ghost" style={{ flex: 1, color: "var(--text-primary)" }} onClick={() => setSelectedMatch(match)}>
+                    <Info size={16} /> Details
+                  </button>
+                  <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleConnect(match)}>
+                    <Users size={16} /> Connect
+                  </button>
                 </div>
               </div>
-
-              <p style={styles.bio}>
-                {match?.bio ? (match.bio.length > 80 ? `${match.bio.substring(0, 80)}...` : match.bio) : "No bio available."}
-              </p>
-
-              <div style={styles.skillsSection}>
-                <div style={styles.skillGroup}>
-                  <p className="text-xs font-semibold text-muted mb-1 uppercase">Offers</p>
-                  <div style={styles.skillTags}>
-                    {(match?.skillsOffered || []).slice(0, 3).map((s, i) => (
-                      <span key={i} className="skill-tag skill-tag-offered">{s}</span>
-                    ))}
-                    {(match?.skillsOffered?.length || 0) > 3 && (
-                      <span className="skill-tag" style={{ background: 'var(--bg-elevated)' }}>+{match.skillsOffered.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-                <div style={styles.skillGroup}>
-                  <p className="text-xs font-semibold text-muted mb-1 uppercase">Wants</p>
-                  <div style={styles.skillTags}>
-                    {(match?.skillsWanted || []).slice(0, 3).map((s, i) => (
-                      <span key={i} className="skill-tag skill-tag-wanted">{s}</span>
-                    ))}
-                    {(match?.skillsWanted?.length || 0) > 3 && (
-                      <span className="skill-tag" style={{ background: 'var(--bg-elevated)' }}>+{match.skillsWanted.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div style={styles.actions}>
-                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => setSelectedMatch(match)}>
-                  <Info size={16} /> Details
-                </button>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleConnect(match)}>
-                  <Users size={16} /> Connect
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -205,6 +211,7 @@ const styles = {
   centerBox: { display: "flex", justifyContent: "center", padding: "100px 0" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "24px" },
   card: { padding: "24px", display: "flex", flexDirection: "column", background: "var(--bg-card)" },
+  highMatchBorder: { boxShadow: "0 0 0 2px var(--primary), 0 10px 40px rgba(99,102,241,0.2)" },
   cardHeader: { display: "flex", justifyContent: "space-between", marginBottom: "16px" },
   matchScoreBadge: { display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(99,102,241,0.15)", color: "var(--primary-light)", padding: "4px 10px", borderRadius: "99px", fontSize: "12px", fontWeight: "700", border: "1px solid rgba(99,102,241,0.3)" },
   mutualBadge: { display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(244,63,94,0.15)", color: "#fb7185", padding: "4px 10px", borderRadius: "99px", fontSize: "12px", fontWeight: "700", border: "1px solid rgba(244,63,94,0.3)" },
