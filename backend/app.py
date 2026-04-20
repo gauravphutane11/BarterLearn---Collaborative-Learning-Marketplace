@@ -11,9 +11,7 @@ from extensions import db
 from models import User, Exchange, Notification
 import os
 
-# -----------------------------
-# App Setup
-# -----------------------------
+
 
 app = Flask(__name__)
 
@@ -30,24 +28,18 @@ jwt = JWTManager(app)
 
 CORS(app, origins="*")
 
-# -----------------------------
-# Create tables automatically
-# -----------------------------
+
 
 with app.app_context():
     db.create_all()
 
-# -----------------------------
-# Root
-# -----------------------------
+
 
 @app.route("/")
 def root():
     return jsonify({"msg": "BarterLearn API running"})
 
-# -----------------------------
-# Register
-# -----------------------------
+
 
 @app.route("/api/register", methods=["POST"])
 def register():
@@ -80,9 +72,7 @@ def register():
 
     return jsonify({"msg": "User registered successfully"})
 
-# -----------------------------
-# Login
-# -----------------------------
+
 
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -122,9 +112,7 @@ def get_me():
 
     return jsonify(user.to_dict())
 
-# -----------------------------
-# Update Profile
-# -----------------------------
+
 
 @app.route("/api/me", methods=["PUT"])
 @jwt_required()
@@ -158,9 +146,7 @@ def update_profile():
 
     return jsonify(user.to_dict())
 
-# -----------------------------
-# Users
-# -----------------------------
+
 
 @app.route("/api/users", methods=["GET"])
 @jwt_required()
@@ -179,9 +165,7 @@ def get_user(user_id):
 
     return jsonify(user.to_dict())
 
-# -----------------------------
-# Matching Algorithm
-# -----------------------------
+
 
 @app.route("/api/matches", methods=["GET"])
 @jwt_required()
@@ -197,27 +181,31 @@ def matches():
 
     for u in users:
 
-        common = list(
-            set(current_user.skills_wanted).intersection(
-                set(u.skills_offered)
-            )
-        )
+        common_wanted = list(set(current_user.skills_wanted).intersection(set(u.skills_offered)))
+        common_offered = list(set(current_user.skills_offered).intersection(set(u.skills_wanted)))
 
-        if len(common) > 0:
+        if len(common_wanted) > 0 or len(common_offered) > 0:
+
+            mutual = len(common_wanted) > 0 and len(common_offered) > 0
+            score = (len(common_wanted) + len(common_offered)) * 20
+            score = min(score, 100)
 
             results.append({
                 "id": u.id,
                 "name": u.name,
                 "avatar": u.avatar,
-                "commonSkills": common,
-                "compatibilityScore": len(common) * 20
+                "bio": u.bio,
+                "rating": u.rating,
+                "skillsOffered": u.skills_offered or [],
+                "skillsWanted": u.skills_wanted or [],
+                "commonSkills": common_wanted,
+                "matchScore": score,
+                "mutualExchange": mutual
             })
 
     return jsonify(results)
 
-# -----------------------------
-# Exchanges
-# -----------------------------
+
 
 @app.route("/api/exchanges", methods=["GET"])
 @jwt_required()
@@ -246,10 +234,21 @@ def create_exchange():
         partner_id=data.get("partner_id"),
         skill=data.get("skill"),
         partner_skill=data.get("partner_skill"),
-        total_sessions=10
+        total_sessions=data.get("total_sessions", 5)
     )
 
     db.session.add(exchange)
+    
+    current_user = User.query.get(user_id)
+    
+    notification = Notification(
+        user_id=data.get("partner_id"),
+        title="New Exchange Request",
+        message=f"{current_user.name} wants to teach you {data.get('skill')} in exchange for {data.get('partner_skill')}!",
+        type="info"
+    )
+    db.session.add(notification)
+    
     db.session.commit()
 
     return jsonify(exchange.to_dict())
@@ -259,15 +258,36 @@ def create_exchange():
 @jwt_required()
 def update_exchange(id):
 
+    user_id = int(get_jwt_identity())
     exchange = Exchange.query.get_or_404(id)
 
     data = request.get_json()
 
     if "sessions_completed" in data:
         exchange.sessions_completed = data["sessions_completed"]
+        partner_to_notify = exchange.partner_id if exchange.user_id == user_id else exchange.user_id
+        current_user = User.query.get(user_id)
+        
+        notif = Notification(
+            user_id=partner_to_notify,
+            title="Session Logged",
+            message=f"{current_user.name} logged a session for Exchange #{exchange.id} ({exchange.sessions_completed}/{exchange.total_sessions}).",
+            type="info"
+        )
+        db.session.add(notif)
 
     if "status" in data:
         exchange.status = data["status"]
+        if exchange.status == "completed":
+            partner_to_notify = exchange.partner_id if exchange.user_id == user_id else exchange.user_id
+            current_user = User.query.get(user_id)
+            notif = Notification(
+                user_id=partner_to_notify,
+                title="Exchange Completed",
+                message=f"{current_user.name} has marked Exchange #{exchange.id} as completed. Great job!",
+                type="success"
+            )
+            db.session.add(notif)
 
     if "rating" in data:
         exchange.rating = data["rating"]
@@ -321,6 +341,20 @@ def read_notification(id):
     db.session.commit()
 
     return jsonify(notification.to_dict())
+
+@app.route("/api/notifications/read-all", methods=["PATCH"])
+@jwt_required()
+def read_all_notifications():
+    user_id = int(get_jwt_identity())
+    
+    notifications = Notification.query.filter_by(user_id=user_id, read=False).all()
+    
+    for n in notifications:
+        n.read = True
+        
+    db.session.commit()
+    
+    return jsonify({"msg": "All notifications marked as read", "count": len(notifications)})
 
 # -----------------------------
 # Run local server
