@@ -1,6 +1,7 @@
 const API_BASE =
-  import.meta.env.VITE_API_BASE ||
-  "https://barterlearn-collaborative-learning-45hs.onrender.com";
+  import.meta.env.VITE_API_BASE !== undefined
+    ? import.meta.env.VITE_API_BASE
+    : "https://barterlearn-collaborative-learning-45hs.onrender.com";
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("access_token");
@@ -71,6 +72,11 @@ export const api = {
 
   markNotificationRead: (id) =>
     request(`/notifications/${id}/read`, {
+      method: "PATCH"
+    }),
+
+  markAllNotificationsRead: () =>
+    request(`/notifications/read-all`, {
       method: "PATCH"
     })
 };

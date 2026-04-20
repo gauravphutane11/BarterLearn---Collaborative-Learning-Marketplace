@@ -34,9 +34,12 @@ export default function Notifications({ currentUser, updateUnread }) {
   };
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter(n => !n.read);
-    for (const n of unread) {
-      await markAsRead(n.id);
+    try {
+      await api.markAllNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      if (updateUnread) updateUnread();
+    } catch (err) {
+      console.error(err);
     }
   };
 

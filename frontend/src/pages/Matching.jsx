@@ -28,8 +28,10 @@ export default function Matching({ currentUser = {} }) {
 
   const handleConnect = async (match) => {
     try {
-      const skill = currentUser?.skillsOffered?.[0] || "Skill Exchange";
-      const partnerSkill = currentUser?.skillsWanted?.[0] || match?.skillsOffered?.[0] || "Skill Exchange";
+      const weOfferTheyWant = (currentUser?.skillsOffered || []).find(s => (match?.skillsWanted || []).includes(s));
+      const skill = weOfferTheyWant || currentUser?.skillsOffered?.[0] || "Skill Exchange";
+
+      const partnerSkill = match?.commonSkills?.[0] || match?.skillsOffered?.[0] || "Skill Exchange";
 
       const res = await api.createExchange({
         partner_id: match?.id,
@@ -37,7 +39,7 @@ export default function Matching({ currentUser = {} }) {
         partner_skill: partnerSkill,
         total_sessions: 5
       });
-      alert(`Connection request sent to ${match?.name}! 🎉\nExchange #${res?.id} created.`);
+      alert(`Connection request sent to ${match?.name}! \nExchange #${res?.id} created.`);
       setSelectedMatch(null);
     } catch (err) {
       console.error(err);
@@ -77,16 +79,16 @@ export default function Matching({ currentUser = {} }) {
             const isHighMatch = match?.matchScore > 85;
             const mutual = match?.mutualExchange;
             return (
-              <div 
-                key={match?.id} 
-                className={`glass-card hover-lift anim-fadeInUp ${mutual ? 'flashy-mutual' : ''}`} 
-                style={{ 
-                  ...styles.card, 
+              <div
+                key={match?.id}
+                className={`glass-card hover-lift anim-fadeInUp ${mutual ? 'flashy-mutual' : ''}`}
+                style={{
+                  ...styles.card,
                   animationDelay: `${idx * 0.05}s`,
                   ...(isHighMatch ? styles.highMatchBorder : {})
                 }}
               >
-                
+
                 <div style={styles.cardHeader}>
                   <div style={styles.matchScoreBadge}>
                     <Target size={14} /> {Math.round(match?.matchScore || 0)}% Match
@@ -122,7 +124,7 @@ export default function Matching({ currentUser = {} }) {
                     <p style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "6px", textTransform: "uppercase" }}>Offers</p>
                     <div style={styles.skillTags}>
                       {(match?.skillsOffered || []).slice(0, 3).map((s, i) => (
-                        <span key={i} className="skill-tag skill-tag-offered" style={{ color: "#fff", background: "rgba(99,102,241,0.3)" }}>{s}</span>
+                        <span key={i} className="skill-tag skill-tag-offered">{s}</span>
                       ))}
                     </div>
                   </div>
@@ -130,7 +132,7 @@ export default function Matching({ currentUser = {} }) {
                     <p style={{ fontSize: "12px", fontWeight: "700", color: "var(--text-primary)", marginBottom: "6px", textTransform: "uppercase" }}>Wants</p>
                     <div style={styles.skillTags}>
                       {(match?.skillsWanted || []).slice(0, 3).map((s, i) => (
-                        <span key={i} className="skill-tag skill-tag-wanted" style={{ color: "#fff", background: "rgba(16,185,129,0.3)" }}>{s}</span>
+                        <span key={i} className="skill-tag skill-tag-wanted">{s}</span>
                       ))}
                     </div>
                   </div>
@@ -166,8 +168,8 @@ export default function Matching({ currentUser = {} }) {
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 800 }}>{selectedMatch.name}</h2>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 8 }}>
-                <span className="badge badge-primary"><Target size={12}/> {Math.round(selectedMatch.matchScore || 0)}% Match</span>
-                <span className="badge badge-warning"><Star size={12}/> {selectedMatch.rating || 0} Rating</span>
+                <span className="badge badge-primary"><Target size={12} /> {Math.round(selectedMatch.matchScore || 0)}% Match</span>
+                <span className="badge badge-warning"><Star size={12} /> {selectedMatch.rating || 0} Rating</span>
               </div>
             </div>
 

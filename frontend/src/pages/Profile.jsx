@@ -141,13 +141,14 @@ export default function Profile({ currentUser = {}, updateUser }) {
                 <div style={styles.skillInputWrap}>
                   <select
                     className="form-input form-select"
+                    style={{ color: 'black' }}
                     value={newSkillOffered}
                     onChange={(e) => setNewSkillOffered(e.target.value)}
                   >
-                    <option value="">Select a skill...</option>
+                    <option value="" style={{ color: 'black' }}>Select a skill...</option>
                     {popularSkills
                       .filter(s => !formData.skillsOffered.includes(s))
-                      .map((s, i) => <option key={i} value={s}>{s}</option>)}
+                      .map((s, i) => <option key={i} value={s} style={{ color: 'black' }}>{s}</option>)}
                   </select>
                   <button className="btn btn-primary btn-icon" onClick={() => addSkill('offered')} disabled={!newSkillOffered}>
                     <Plus size={18} />
@@ -187,13 +188,14 @@ export default function Profile({ currentUser = {}, updateUser }) {
                 <div style={styles.skillInputWrap}>
                   <select
                     className="form-input form-select"
+                    style={{ color: 'black' }}
                     value={newSkillWanted}
                     onChange={(e) => setNewSkillWanted(e.target.value)}
                   >
-                    <option value="">Select a skill...</option>
+                    <option value="" style={{ color: 'black' }}>Select a skill...</option>
                     {popularSkills
                       .filter(s => !formData.skillsWanted.includes(s))
-                      .map((s, i) => <option key={i} value={s}>{s}</option>)}
+                      .map((s, i) => <option key={i} value={s} style={{ color: 'black' }}>{s}</option>)}
                   </select>
                   <button className="btn btn-success btn-icon" onClick={() => addSkill('wanted')} disabled={!newSkillWanted}>
                     <Plus size={18} />
