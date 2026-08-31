@@ -1,0 +1,39 @@
+How to Run Learvix Locally
+==============================
+
+You need TWO terminal windows — one for backend, one for frontend.
+
+=========================================
+TERMINAL 1: Backend (Flask API)
+=========================================
+1. cd backend
+2. python -m venv venv
+   venv\Scripts\activate
+3. pip install -r requirements.txt
+4. (First time only) copy .env.example .env
+5. (First time only) python -m flask --app app.py db upgrade
+6. python -m flask --app app.py run
+
+   Backend runs at: http://localhost:5000
+   Keep this terminal open!
+
+=========================================
+TERMINAL 2: Frontend (React via Vite)
+=========================================
+1. cd frontend
+2. (First time only) npm install
+3. npm run dev
+
+   Frontend runs at: http://localhost:3000
+   Vite proxies /api calls to http://localhost:5000 automatically.
+
+=========================================
+PRODUCTION DEPLOYMENT
+=========================================
+Backend → Render:
+  - render.yaml handles setup automatically
+  - Set JWT_SECRET_KEY, FLASK_ENV=production, DATABASE_URL in Render dashboard
+
+Frontend → Vercel:
+  - Set Root Directory to: frontend
+  - Set VITE_API_BASE=https://learvix-collaborative.onrender.com in Vercel dashboard

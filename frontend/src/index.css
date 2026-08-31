@@ -1,0 +1,7 @@
+/* index.css acts as basic boilerplate but the UI is governed by global.css. 
+   Keeping minimal required reset here just in case. */
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
